@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>Open incidents</h2>
+  {% if not rows %}
+    <p>No incidents yet. <a href="/incidents/new">Create one</a> or send a test webhook (see README).</p>
+  {% else %}
+  <table>
+    <thead>
+      <tr>
+        <th>Incident</th>
+        <th>Status</th>
+        <th>Frameworks</th>
+        <th>Nearest deadline</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr onclick="window.location='/incidents/{{ row.incident.id }}'" style="cursor:pointer">
+        <td>
+          <strong>{{ row.incident.title }}</strong><br>
+          <span style="color:#64748b;font-size:0.82rem">{{ row.incident.source_system or row.incident.source.value }}</span>
+        </td>
+        <td><span class="badge badge-{{ row.incident.status.value }}">{{ row.incident.status.value.replace('_', ' ') }}</span></td>
+        <td>
+          {% for fw, label in row.frameworks.items() %}
+            <span class="badge badge-{{ label.result }}" title="{{ label.label }}">{{ fw.upper() }}</span>
+          {% endfor %}
+        </td>
+        <td>
+          {% if row.nearest_deadline %}
+            <span class="deadline {{ 'overdue' if row.is_overdue else '' }}">
+              {{ row.nearest_deadline.label }}: {{ row.nearest_deadline.due_at.strftime('%Y-%m-%d %H:%M UTC') }}
+            </span>
+          {% else %}
+            <span style="color:#94a3b8">--</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+{% endblock %}

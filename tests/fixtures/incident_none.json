@@ -1,0 +1,22 @@
+{
+  "title": "Single employee laptop briefly disconnected from VPN",
+  "description": "A field sales laptop lost VPN connectivity for four minutes during a routine ISP failover; no service impact, no data involved, fully resolved automatically.",
+  "facts": {
+    "affected_clients_pct": 0,
+    "affected_financial_counterparts_pct": 0,
+    "downtime_minutes": 4,
+    "critical_services_affected": false,
+    "member_states_affected_count": 0,
+    "data_loss_confidentiality": false,
+    "data_loss_integrity": false,
+    "data_loss_availability": false,
+    "data_loss_authenticity": false,
+    "economic_impact_amount_eur": 0,
+    "severe_operational_disruption": false,
+    "significant_financial_loss": false,
+    "affects_other_persons_considerable_damage": false,
+    "personal_data_involved": false,
+    "breach_likely_risk_to_individuals": false
+  },
+  "expected": { "dora": "not_reportable", "nis2": "not_reportable", "gdpr": "not_reportable" }
+}

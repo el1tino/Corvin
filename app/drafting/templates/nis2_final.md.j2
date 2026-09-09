@@ -1,0 +1,33 @@
+# NIS2 Final Report — Significant Incident
+
+**Entity:** {{ customer.entity_name | ph('entity legal name') }}
+**CSIRT / Competent Authority:** {{ customer.nis2_csirt_or_authority_name | ph('national CSIRT or competent authority name') }}
+**Authority Contact:** {{ customer.nis2_csirt_or_authority_contact | ph('national CSIRT or competent authority contact details') }}
+
+## Incident Reference
+- Internal incident ID: {{ incident.id }}
+- Incident title: {{ incident.title }}
+
+## Detailed Description
+{{ facts.get('nis2_detailed_description') | ph('a detailed description of the incident, including its severity and impact') }}
+
+## Threat / Root Cause
+{{ facts.get('nis2_root_cause') | ph('the type of threat or root cause that is likely to have triggered the incident') }}
+
+## Mitigation Measures Applied
+{{ facts.get('nis2_mitigation_measures') | ph('mitigation measures applied and ongoing') }}
+
+## Cross-Border Impact
+{{ facts.get('nis2_cross_border_impact') | ph('the cross-border impact of the incident, if any') }}
+
+## Statutory Deadline
+- Final report due (UTC): {{ deadline_due_at | ph('final report due date (one month from awareness)') }}
+- Basis: {{ deadline_basis | ph('deadline basis') }}
+
+## Confirmation
+This report was reviewed and confirmed by: {{ confirmed_by | ph('name and role of the confirming officer') }}
+
+---
+*This is a DRAFT prepared for human review by Corvin. It must be reviewed, completed and submitted by an
+authorized representative of {{ customer.entity_name | ph('entity legal name') }}. Corvin does not submit
+notifications to any authority on the entity's behalf.*

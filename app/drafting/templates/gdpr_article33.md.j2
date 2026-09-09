@@ -1,0 +1,53 @@
+# GDPR Article 33 Notification — Personal Data Breach
+
+**Controller:** {{ customer.entity_name | ph('entity legal name') }}
+**Supervisory Authority:** {{ customer.gdpr_supervisory_authority_name | ph('national supervisory authority name') }}
+**Authority Contact:** {{ customer.gdpr_supervisory_authority_contact | ph('national supervisory authority contact details') }}
+**DPO Contact:** {{ facts.get('gdpr_dpo_contact') | ph('Data Protection Officer name and contact details') }}
+
+## Incident Reference
+- Internal incident ID: {{ incident.id }}
+- Incident title: {{ incident.title }}
+- Awareness timestamp (UTC): {{ timestamps.awareness_at | ph('awareness timestamp') }}
+
+## Basis for Notification
+{% for line in classification.explanations %}
+- {{ line }}
+{% endfor %}
+
+## Nature of the Breach
+{{ incident.description | ph('a description of the nature of the personal data breach') }}
+
+## Categories and Approximate Number of Data Subjects
+{{ facts.get('gdpr_data_subject_categories') | ph('categories of data subjects concerned') }}, approximately {{ facts.get('data_subjects_affected_count') | ph('approximate number of data subjects concerned') }} individuals.
+
+## Categories and Approximate Number of Personal Data Records
+{{ facts.get('gdpr_data_record_categories') | ph('categories and approximate number of personal data records concerned') }}
+
+## Likely Consequences
+{{ facts.get('gdpr_likely_consequences') | ph('the likely consequences of the personal data breach') }}
+
+## Measures Taken or Proposed
+{{ facts.get('gdpr_measures_taken') | ph('measures taken or proposed to address the breach and mitigate its possible adverse effects') }}
+
+## Data Subject Notification (Article 34)
+{% if data_subject_notification_required %}
+This breach is assessed as likely to result in a high risk to the rights and freedoms of individuals.
+Data subjects must be informed without undue delay.
+Status: {{ facts.get('gdpr_data_subject_notification_status') | ph('status of the data-subject notification (e.g. sent on <date>, in progress, planned)') }}
+{% else %}
+Not currently assessed as high-risk to individuals; direct notification to data subjects is not required
+on the basis of the facts recorded for this incident.
+{% endif %}
+
+## Statutory Deadline
+- Supervisory authority notification due (UTC): {{ deadline_due_at | ph('supervisory authority notification due date (72h from awareness)') }}
+- Basis: {{ deadline_basis | ph('deadline basis') }}
+
+## Confirmation
+This notification was reviewed and confirmed by: {{ confirmed_by | ph('name and role of the confirming officer (e.g. DPO)') }}
+
+---
+*This is a DRAFT prepared for human review by Corvin. It must be reviewed, completed and submitted by an
+authorized representative of {{ customer.entity_name | ph('entity legal name') }}. Corvin does not submit
+notifications to any authority on the entity's behalf.*

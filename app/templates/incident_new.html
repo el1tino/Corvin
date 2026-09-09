@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}New incident{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>New incident (manual intake)</h2>
+  <form method="post" action="/incidents/new">
+    <label for="title">Title</label>
+    <input type="text" id="title" name="title" required>
+
+    <label for="description">Description</label>
+    <textarea id="description" name="description"></textarea>
+
+    <div class="grid">
+      <div>
+        <label for="detected_at">Detected at (UTC)</label>
+        <input type="datetime-local" id="detected_at" name="detected_at">
+      </div>
+      <div>
+        <label for="awareness_at">Awareness at (UTC)</label>
+        <input type="datetime-local" id="awareness_at" name="awareness_at">
+      </div>
+    </div>
+
+    <h3>Facts for the classification engine</h3>
+    <p style="color:#64748b;font-size:0.85rem">Leave a field blank if unknown -- the engine will mark the
+      affected frameworks as "needs human input" rather than guessing.</p>
+
+    <div class="grid">
+      <div>
+        <label for="affected_clients_pct">Clients affected (%)</label>
+        <input type="number" step="0.1" id="affected_clients_pct" name="affected_clients_pct">
+        <label for="affected_financial_counterparts_pct">Financial counterparts affected (%)</label>
+        <input type="number" step="0.1" id="affected_financial_counterparts_pct" name="affected_financial_counterparts_pct">
+        <label for="downtime_minutes">Downtime (minutes)</label>
+        <input type="number" id="downtime_minutes" name="downtime_minutes">
+        <div class="checkbox-row"><input type="checkbox" id="critical_services_affected" name="critical_services_affected"><label for="critical_services_affected" style="margin:0">Critical/important function affected</label></div>
+        <label for="member_states_affected_count">EU member states affected (count)</label>
+        <input type="number" id="member_states_affected_count" name="member_states_affected_count">
+        <label for="economic_impact_amount_eur">Estimated economic impact (EUR)</label>
+        <input type="number" id="economic_impact_amount_eur" name="economic_impact_amount_eur">
+      </div>
+      <div>
+        <div class="checkbox-row"><input type="checkbox" id="data_loss_confidentiality" name="data_loss_confidentiality"><label for="data_loss_confidentiality" style="margin:0">Data loss: confidentiality</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="data_loss_integrity" name="data_loss_integrity"><label for="data_loss_integrity" style="margin:0">Data loss: integrity</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="data_loss_availability" name="data_loss_availability"><label for="data_loss_availability" style="margin:0">Data loss: availability</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="data_loss_authenticity" name="data_loss_authenticity"><label for="data_loss_authenticity" style="margin:0">Data loss: authenticity</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="severe_operational_disruption" name="severe_operational_disruption"><label for="severe_operational_disruption" style="margin:0">Severe operational disruption (NIS2)</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="significant_financial_loss" name="significant_financial_loss"><label for="significant_financial_loss" style="margin:0">Significant financial loss (NIS2)</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="affects_other_persons_considerable_damage" name="affects_other_persons_considerable_damage"><label for="affects_other_persons_considerable_damage" style="margin:0">Considerable damage to others (NIS2)</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="personal_data_involved" name="personal_data_involved"><label for="personal_data_involved" style="margin:0">Personal data involved (GDPR)</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="breach_likely_risk_to_individuals" name="breach_likely_risk_to_individuals"><label for="breach_likely_risk_to_individuals" style="margin:0">Likely risk to individuals (GDPR Art. 33)</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="breach_likely_high_risk_to_individuals" name="breach_likely_high_risk_to_individuals"><label for="breach_likely_high_risk_to_individuals" style="margin:0">Likely HIGH risk to individuals (GDPR Art. 34)</label></div>
+      </div>
+    </div>
+
+    <button class="btn" type="submit">Create incident</button>
+  </form>
+</div>
+{% endblock %}

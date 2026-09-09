@@ -1,0 +1,45 @@
+# DORA Initial Notification — Major ICT-Related Incident
+
+**Entity:** {{ customer.entity_name | ph('entity legal name') }}
+**Member State:** {{ customer.member_state | ph('member state') }}
+**Competent Authority:** {{ customer.dora_authority_name | ph('DORA competent authority name') }}
+**Authority Contact:** {{ customer.dora_authority_contact | ph('DORA competent authority contact details') }}
+
+## Incident Reference
+- Internal incident ID: {{ incident.id }}
+- Incident title: {{ incident.title }}
+- Awareness timestamp (UTC): {{ timestamps.awareness_at | ph('awareness timestamp') }}
+- Classified-as-major timestamp (UTC): {{ timestamps.classification_confirmed_at | ph('classification timestamp') }}
+
+## Basis for Classification as a Major Incident
+This incident was classified as a DORA major ICT-related incident on the following basis:
+{% for line in classification.explanations %}
+- {{ line }}
+{% endfor %}
+
+## Incident Description
+{{ incident.description | ph('a description of the incident, its origin and how it was detected') }}
+
+## Impact Summary
+- Clients affected: {{ facts.get('affected_clients_pct') | ph('percentage of clients affected') }}%
+- Financial counterparts affected: {{ facts.get('affected_financial_counterparts_pct') | ph('percentage of financial counterparts affected') }}%
+- Downtime: {{ facts.get('downtime_minutes') | ph('downtime in minutes') }} minutes
+- Critical or important function affected: {{ facts.get('critical_services_affected') | ph('whether a critical or important function was affected (yes/no)') }}
+- EU member states affected: {{ facts.get('member_states_affected_count') | ph('number of EU member states affected') }}
+- Data loss — confidentiality: {{ facts.get('data_loss_confidentiality') | ph('confidentiality data loss (yes/no)') }}
+- Data loss — integrity: {{ facts.get('data_loss_integrity') | ph('integrity data loss (yes/no)') }}
+- Data loss — availability: {{ facts.get('data_loss_availability') | ph('availability data loss (yes/no)') }}
+- Data loss — authenticity: {{ facts.get('data_loss_authenticity') | ph('authenticity data loss (yes/no)') }}
+- Estimated economic impact: EUR {{ facts.get('economic_impact_amount_eur') | ph('estimated direct and indirect costs and losses in EUR') }}
+
+## Statutory Deadline
+- Initial notification due (UTC): {{ deadline_due_at | ph('initial notification due date, per the 4-hour/24-hour cap rule') }}
+- Basis: {{ deadline_basis | ph('deadline basis') }}
+
+## Confirmation
+This classification was reviewed and confirmed by: {{ confirmed_by | ph('name and role of the confirming officer') }}
+
+---
+*This is a DRAFT prepared for human review by Corvin. It must be reviewed, completed and submitted by an
+authorized representative of {{ customer.entity_name | ph('entity legal name') }}. Corvin does not submit
+notifications to any authority on the entity's behalf.*

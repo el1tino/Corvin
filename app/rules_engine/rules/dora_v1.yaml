@@ -1,0 +1,54 @@
+version: 1
+framework: dora
+title: "DORA major ICT-related incident classification (Regulation 2022/2554 and the classification RTS)"
+disclaimer: >
+  Starting-point thresholds only, chosen to be broadly representative of the
+  classification RTS categories (clients/counterparts, duration/criticality,
+  geographical spread, data losses, economic impact). Review against the
+  primary legal text and any national guidance before relying on this for a
+  live regulatory decision. Edit this file and bump `version` to tune.
+combinator: any
+rules:
+  - id: dora.clients_or_counterparts
+    description: >
+      More than 10% of the entity's registered clients or financial
+      counterparts are affected by the incident.
+    logic:
+      any:
+        - {field: affected_clients_pct, op: gte, value: 10}
+        - {field: affected_financial_counterparts_pct, op: gte, value: 10}
+
+  - id: dora.duration_and_criticality
+    description: >
+      A critical or important function was unavailable, or the affected
+      service was down for 2 hours or more.
+    logic:
+      any:
+        - {field: critical_services_affected, op: is_true}
+        - {field: downtime_minutes, op: gte, value: 120}
+
+  - id: dora.geographical_spread
+    description: "Impact spreads to two or more EU member states."
+    logic:
+      {field: member_states_affected_count, op: gte, value: 2}
+
+  - id: dora.data_losses
+    description: >
+      Loss of availability, authenticity, integrity or confidentiality of
+      data supporting a critical or important function.
+    logic:
+      any:
+        - {field: data_loss_confidentiality, op: is_true}
+        - {field: data_loss_integrity, op: is_true}
+        - {field: data_loss_availability, op: is_true}
+        - {field: data_loss_authenticity, op: is_true}
+
+  - id: dora.economic_impact
+    description: "Direct and indirect costs and losses are estimated at EUR 100,000 or more."
+    logic:
+      {field: economic_impact_amount_eur, op: gte, value: 100000}
+
+outcome:
+  reportable_label: "DORA major incident"
+  not_reportable_label: "Not a DORA major incident on the data provided"
+  needs_human_input_label: "Cannot classify under DORA without more information"

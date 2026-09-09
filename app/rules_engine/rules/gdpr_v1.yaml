@@ -1,0 +1,31 @@
+version: 1
+framework: gdpr
+title: "GDPR personal data breach notification (Regulation 2016/679, Articles 33-34)"
+disclaimer: >
+  The Art. 33(1)/34(1) risk assessments are inherently case-by-case; this
+  file encodes only the two gating questions the Regulation asks. Human
+  sign-off is mandatory before any filing regardless of what fires here.
+  Separately, `breach_likely_high_risk_to_individuals` (Art. 34, notifying
+  data subjects) is tracked as a fact for drafting/clock purposes but is
+  not itself a gate on the Article 33 result below.
+combinator: all
+rules:
+  - id: gdpr.breach_occurred
+    description: >
+      A breach of security led to the accidental or unlawful destruction,
+      loss, alteration, unauthorised disclosure of, or access to, personal
+      data.
+    logic:
+      {field: personal_data_involved, op: is_true}
+
+  - id: gdpr.risk_to_individuals
+    description: >
+      The breach is not unlikely to result in a risk to the rights and
+      freedoms of natural persons (the Article 33(1) notification trigger).
+    logic:
+      {field: breach_likely_risk_to_individuals, op: is_true}
+
+outcome:
+  reportable_label: "GDPR Article 33 notification required"
+  not_reportable_label: "Not reportable to the supervisory authority on the data provided"
+  needs_human_input_label: "Cannot assess GDPR reportability without more information"

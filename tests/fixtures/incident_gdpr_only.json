@@ -1,0 +1,24 @@
+{
+  "title": "Misconfigured cloud storage bucket exposed customer documents",
+  "description": "A support engineer briefly made a storage bucket containing scanned ID documents publicly readable; access logs show it was crawled before being locked down.",
+  "facts": {
+    "affected_clients_pct": 0.5,
+    "affected_financial_counterparts_pct": 0,
+    "downtime_minutes": 0,
+    "critical_services_affected": false,
+    "member_states_affected_count": 1,
+    "data_loss_confidentiality": false,
+    "data_loss_integrity": false,
+    "data_loss_availability": false,
+    "data_loss_authenticity": false,
+    "economic_impact_amount_eur": 5000,
+    "severe_operational_disruption": false,
+    "significant_financial_loss": false,
+    "affects_other_persons_considerable_damage": false,
+    "personal_data_involved": true,
+    "breach_likely_risk_to_individuals": true,
+    "breach_likely_high_risk_to_individuals": false,
+    "data_subjects_affected_count": 60
+  },
+  "expected": { "dora": "not_reportable", "nis2": "not_reportable", "gdpr": "reportable" }
+}

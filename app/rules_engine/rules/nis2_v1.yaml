@@ -1,0 +1,30 @@
+version: 1
+framework: nis2
+title: "NIS2 significant incident classification (Directive 2022/2555, national transposition)"
+disclaimer: >
+  The operative thresholds are set by each member state's transposition
+  law, not by the Directive's wording directly. Treat these two conditions
+  as a first pass and confirm against the customer's national transposition
+  before relying on this for a live regulatory decision.
+combinator: any
+rules:
+  - id: nis2.severe_operational_or_financial
+    description: >
+      Has caused, or is capable of causing, severe operational disruption
+      of the service or financial loss for the entity.
+    logic:
+      any:
+        - {field: severe_operational_disruption, op: is_true}
+        - {field: significant_financial_loss, op: is_true}
+
+  - id: nis2.affects_other_persons
+    description: >
+      Has affected, or is capable of affecting, other natural or legal
+      persons by causing considerable material or non-material damage.
+    logic:
+      {field: affects_other_persons_considerable_damage, op: is_true}
+
+outcome:
+  reportable_label: "NIS2 significant incident"
+  not_reportable_label: "Not a NIS2 significant incident on the data provided"
+  needs_human_input_label: "Cannot classify under NIS2 without more information"

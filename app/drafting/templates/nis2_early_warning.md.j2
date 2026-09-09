@@ -1,0 +1,31 @@
+# NIS2 Early Warning — Significant Incident
+
+**Entity:** {{ customer.entity_name | ph('entity legal name') }}
+**Member State:** {{ customer.member_state | ph('member state') }}
+**CSIRT / Competent Authority:** {{ customer.nis2_csirt_or_authority_name | ph('national CSIRT or competent authority name') }}
+**Authority Contact:** {{ customer.nis2_csirt_or_authority_contact | ph('national CSIRT or competent authority contact details') }}
+
+## Incident Reference
+- Internal incident ID: {{ incident.id }}
+- Incident title: {{ incident.title }}
+- Awareness timestamp (UTC): {{ timestamps.awareness_at | ph('awareness timestamp') }}
+
+## Basis for Classification as Significant
+{% for line in classification.explanations %}
+- {{ line }}
+{% endfor %}
+
+## Preliminary Indication
+{{ incident.description | ph('a preliminary indication of whether the incident is suspected of being caused by unlawful or malicious acts, and whether it could have a cross-border impact') }}
+
+## Statutory Deadline
+- Early warning due (UTC): {{ deadline_due_at | ph('early warning due date (24h from awareness)') }}
+- Basis: {{ deadline_basis | ph('deadline basis') }}
+
+## Confirmation
+This classification was reviewed and confirmed by: {{ confirmed_by | ph('name and role of the confirming officer') }}
+
+---
+*This is a DRAFT prepared for human review by Corvin. It must be reviewed, completed and submitted by an
+authorized representative of {{ customer.entity_name | ph('entity legal name') }}. Corvin does not submit
+notifications to any authority on the entity's behalf.*

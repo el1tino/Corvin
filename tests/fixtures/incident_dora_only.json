@@ -1,0 +1,22 @@
+{
+  "title": "Core payments API outage after failed database migration",
+  "description": "A botched schema migration on the primary payments database took the core payments API down across all EU regions for over three hours.",
+  "facts": {
+    "affected_clients_pct": 18.5,
+    "affected_financial_counterparts_pct": 4.0,
+    "downtime_minutes": 210,
+    "critical_services_affected": true,
+    "member_states_affected_count": 3,
+    "data_loss_confidentiality": false,
+    "data_loss_integrity": false,
+    "data_loss_availability": false,
+    "data_loss_authenticity": false,
+    "economic_impact_amount_eur": 340000,
+    "severe_operational_disruption": false,
+    "significant_financial_loss": false,
+    "affects_other_persons_considerable_damage": false,
+    "personal_data_involved": false,
+    "breach_likely_risk_to_individuals": false
+  },
+  "expected": { "dora": "reportable", "nis2": "not_reportable", "gdpr": "not_reportable" }
+}

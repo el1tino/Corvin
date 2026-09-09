@@ -1,0 +1,22 @@
+{
+  "title": "DDoS-driven outage of the customer support portal",
+  "description": "A sustained volumetric DDoS attack against the (non-financial, non-critical) customer support portal caused severe disruption to that service for several hours. No client-facing payment or account functions were affected, and no data was accessed.",
+  "facts": {
+    "affected_clients_pct": 3.0,
+    "affected_financial_counterparts_pct": 0,
+    "downtime_minutes": 30,
+    "critical_services_affected": false,
+    "member_states_affected_count": 1,
+    "data_loss_confidentiality": false,
+    "data_loss_integrity": false,
+    "data_loss_availability": false,
+    "data_loss_authenticity": false,
+    "economic_impact_amount_eur": 8000,
+    "severe_operational_disruption": true,
+    "significant_financial_loss": false,
+    "affects_other_persons_considerable_damage": false,
+    "personal_data_involved": false,
+    "breach_likely_risk_to_individuals": false
+  },
+  "expected": { "dora": "not_reportable", "nis2": "reportable", "gdpr": "not_reportable" }
+}

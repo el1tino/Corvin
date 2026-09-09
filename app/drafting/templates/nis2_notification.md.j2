@@ -1,0 +1,33 @@
+# NIS2 Incident Notification — Significant Incident
+
+**Entity:** {{ customer.entity_name | ph('entity legal name') }}
+**CSIRT / Competent Authority:** {{ customer.nis2_csirt_or_authority_name | ph('national CSIRT or competent authority name') }}
+**Authority Contact:** {{ customer.nis2_csirt_or_authority_contact | ph('national CSIRT or competent authority contact details') }}
+
+## Incident Reference
+- Internal incident ID: {{ incident.id }}
+- Incident title: {{ incident.title }}
+- Awareness timestamp (UTC): {{ timestamps.awareness_at | ph('awareness timestamp') }}
+
+## Initial Assessment
+{{ incident.description | ph('an initial assessment of the incident, including its severity and impact') }}
+
+## Impact Summary
+- Severe operational disruption: {{ facts.get('severe_operational_disruption') | ph('whether the incident caused severe operational disruption (yes/no)') }}
+- Significant financial loss: {{ facts.get('significant_financial_loss') | ph('whether the incident caused significant financial loss (yes/no)') }}
+- Considerable damage to other persons: {{ facts.get('affects_other_persons_considerable_damage') | ph('whether other persons suffered considerable material or non-material damage (yes/no)') }}
+
+## Indicators of Compromise (if applicable)
+{{ facts.get('nis2_indicators_of_compromise') | ph('any indicators of compromise identified so far') }}
+
+## Statutory Deadline
+- Incident notification due (UTC): {{ deadline_due_at | ph('incident notification due date (72h from awareness)') }}
+- Basis: {{ deadline_basis | ph('deadline basis') }}
+
+## Confirmation
+This notification was reviewed and confirmed by: {{ confirmed_by | ph('name and role of the confirming officer') }}
+
+---
+*This is a DRAFT prepared for human review by Corvin. It must be reviewed, completed and submitted by an
+authorized representative of {{ customer.entity_name | ph('entity legal name') }}. Corvin does not submit
+notifications to any authority on the entity's behalf.*

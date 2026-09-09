@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}Corvin{% endblock %} · Corvin</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/dashboard">Corvin</a>
+    <span class="tagline">Compliance-aware incident-response orchestrator</span>
+    {% if user %}
+      <nav class="topnav">
+        <span class="whoami">{{ user.full_name }} &middot; {{ user.role.value }}</span>
+        <a href="/incidents/new">+ New incident</a>
+        <form method="post" action="/logout" style="display:inline">
+          <button type="submit" class="linklike">Log out</button>
+        </form>
+      </nav>
+    {% endif %}
+  </header>
+  <main class="container">
+    {% if request.query_params.get('msg') %}
+      <div class="flash">{{ request.query_params.get('msg') }}</div>
+    {% endif %}
+    {% if request.query_params.get('err') %}
+      <div class="flash flash-error">{{ request.query_params.get('err') }}</div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="footer">
+    Data residency: EU. Every screen here is decision support -- a named human must confirm
+    classification before any clock or draft is authoritative.
+  </footer>
+</body>
+</html>

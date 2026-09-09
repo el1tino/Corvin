@@ -1,0 +1,6 @@
+{
+  "title": "Unusual outbound traffic spike detected overnight by EDR",
+  "description": "The EDR flagged an unusual overnight spike in outbound traffic from a database server. Investigation is ongoing; it is not yet known whether any data left the environment, which systems were involved, or how many clients might be affected.",
+  "facts": {},
+  "expected": { "dora": "needs_human_input", "nis2": "needs_human_input", "gdpr": "needs_human_input" }
+}

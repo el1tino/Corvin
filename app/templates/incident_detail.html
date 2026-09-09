@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}{{ incident.title }}{% endblock %}
+{% block content %}
+
+<div class="card">
+  <h2>{{ incident.title }} <span class="badge badge-{{ incident.status.value }}">{{ incident.status.value.replace('_',' ') }}</span></h2>
+  <p>{{ incident.description or "(no description)" }}</p>
+  <p style="color:#64748b;font-size:0.85rem">
+    Source: {{ incident.source.value }}{% if incident.source_system %} &middot; {{ incident.source_system }}{% endif %}
+    {% if incident.source_reference %} &middot; ref {{ incident.source_reference }}{% endif %}
+    &middot; created {{ incident.created_at.strftime('%Y-%m-%d %H:%M UTC') }}
+  </p>
+  <p>
+    <strong>Detected at:</strong> {{ incident.detected_at.strftime('%Y-%m-%d %H:%M UTC') if incident.detected_at else '(unknown)' }}
+    &nbsp;&middot;&nbsp;
+    <strong>Awareness at:</strong> {{ incident.awareness_at.strftime('%Y-%m-%d %H:%M UTC') if incident.awareness_at else '(unknown)' }}
+    &nbsp;&middot;&nbsp;
+    <strong>Classified-as-major at:</strong> {{ incident.classification_confirmed_at.strftime('%Y-%m-%d %H:%M UTC') if incident.classification_confirmed_at else '(not yet confirmed)' }}
+  </p>
+</div>
+
+<div class="card">
+  <h3>Facts &amp; timestamps</h3>
+  {% if incident.facts %}
+  <table>
+    <tbody>
+      {% for k, v in incident.facts.items() %}
+      <tr><td>{{ k.replace('_',' ') }}</td><td>{{ v }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>No facts recorded yet.</p>
+  {% endif %}
+
+  <details>
+    <summary style="cursor:pointer;margin-top:12px">Edit facts &amp; timestamps</summary>
+    <form method="post" action="/incidents/{{ incident.id }}/facts">
+      <div class="grid">
+        <div>
+          <label>Detected at (UTC)</label>
+          <input type="datetime-local" name="detected_at" value="{{ incident.detected_at.strftime('%Y-%m-%dT%H:%M') if incident.detected_at else '' }}">
+        </div>
+        <div>
+          <label>Awareness at (UTC)</label>
+          <input type="datetime-local" name="awareness_at" value="{{ incident.awareness_at.strftime('%Y-%m-%dT%H:%M') if incident.awareness_at else '' }}">
+        </div>
+      </div>
+      <div class="grid">
+        <div>
+          <label>Clients affected (%)</label>
+          <input type="number" step="0.1" name="affected_clients_pct" value="{{ incident.facts.get('affected_clients_pct', '') }}">
+          <label>Financial counterparts affected (%)</label>
+          <input type="number" step="0.1" name="affected_financial_counterparts_pct" value="{{ incident.facts.get('affected_financial_counterparts_pct', '') }}">
+          <label>Downtime (minutes)</label>
+          <input type="number" name="downtime_minutes" value="{{ incident.facts.get('downtime_minutes', '') }}">
+          <div class="checkbox-row"><input type="checkbox" name="critical_services_affected" {{ 'checked' if incident.facts.get('critical_services_affected') }}><label style="margin:0">Critical/important function affected</label></div>
+          <label>EU member states affected</label>
+          <input type="number" name="member_states_affected_count" value="{{ incident.facts.get('member_states_affected_count', '') }}">
+          <label>Estimated economic impact (EUR)</label>
+          <input type="number" name="economic_impact_amount_eur" value="{{ incident.facts.get('economic_impact_amount_eur', '') }}">
+        </div>
+        <div>
+          <div class="checkbox-row"><input type="checkbox" name="data_loss_confidentiality" {{ 'checked' if incident.facts.get('data_loss_confidentiality') }}><label style="margin:0">Data loss: confidentiality</label></div>
+          <div class="checkbox-row"><input type="checkbox" name="data_loss_integrity" {{ 'checked' if incident.facts.get('data_loss_integrity') }}><label style="margin:0">Data loss: integrity</label></div>
+          <div class="checkbox-row"><input type="checkbox" name="data_loss_availability" {{ 'checked' if incident.facts.get('data_loss_availability') }}><label style="margin:0">Data loss: availability</label></div>
+          <div class="checkbox-row"><input type="checkbox" name="data_loss_authenticity" {{ 'checked' if incident.facts.get('data_loss_authenticity') }}><label style="margin:0">Data loss: authenticity</label></div>
+          <div class="checkbox-row"><input type="checkbox" name="severe_operational_disruption" {{ 'checked' if incident.facts.get('severe_operational_disruption') }}><label style="margin:0">Severe operational disruption (NIS2)</label></div>
+          <div class="checkbox-row"><input type="checkbox" name="significant_financial_loss" {{ 'checked' if incident.facts.get('significant_financial_loss') }}><label style="margin:0">Significant financial loss (NIS2)</label></div>
+          <div class="checkbox-row"><input type="checkbox" name="affects_other_persons_considerable_damage" {{ 'checked' if incident.facts.get('affects_other_persons_considerable_damage') }}><label style="margin:0">Considerable damage to others (NIS2)</label></div>
+          <div class="checkbox-row"><input type="checkbox" name="personal_data_involved" {{ 'checked' if incident.facts.get('personal_data_involved') }}><label style="margin:0">Personal data involved (GDPR)</label></div>
+          <div class="checkbox-row"><input type="checkbox" name="breach_likely_risk_to_individuals" {{ 'checked' if incident.facts.get('breach_likely_risk_to_individuals') }}><label style="margin:0">Likely risk to individuals (Art. 33)</label></div>
+          <div class="checkbox-row"><input type="checkbox" name="breach_likely_high_risk_to_individuals" {{ 'checked' if incident.facts.get('breach_likely_high_risk_to_individuals') }}><label style="margin:0">Likely HIGH risk (Art. 34)</label></div>
+        </div>
+      </div>
+      <button class="btn secondary" type="submit">Save facts</button>
+    </form>
+  </details>
+</div>
+
+<div class="card">
+  <h3>Classification</h3>
+  <form method="post" action="/incidents/{{ incident.id }}/classify" style="display:inline">
+    <button class="btn" type="submit">Run classification engine</button>
+  </form>
+
+  {% if latest_run %}
+    {% if facts_changed_since_run %}
+      <p class="flash flash-error">Facts have changed since this run -- re-run classification before confirming.</p>
+    {% endif %}
+    <div class="grid" style="margin-top:16px">
+      {% for fw, result in latest_run.results.items() %}
+      <div class="card" style="margin-bottom:0">
+        <strong>{{ fw.upper() }}</strong>
+        <span class="badge badge-{{ result.result }}">{{ result.result.replace('_',' ') }}</span>
+        <p style="font-size:0.85rem">{{ result.label }} (ruleset v{{ latest_run.ruleset_versions.get(fw) }})</p>
+        <ul class="explanations">
+          {% for line in result.explanations %}
+          <li>{{ line }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if not latest_run.is_confirmed %}
+    <form method="post" action="/incidents/{{ incident.id }}/confirm" style="margin-top:16px">
+      <input type="hidden" name="run_id" value="{{ latest_run.id }}">
+      <button class="btn" type="submit" {{ 'disabled' if facts_changed_since_run }}>
+        I confirm this classification (named sign-off)
+      </button>
+      <p style="font-size:0.8rem;color:#64748b">
+        Confirming as {{ user.full_name }} ({{ user.role.value }}) records your name and the exact time.
+        This is required before any clock or draft becomes authoritative.
+      </p>
+    </form>
+    {% else %}
+      <p style="margin-top:12px">Confirmed by <strong>{{ latest_run.confirmed_by.display_label() }}</strong> at {{ latest_run.confirmed_at.strftime('%Y-%m-%d %H:%M UTC') }}.</p>
+    {% endif %}
+  {% else %}
+    <p style="margin-top:12px">No classification run yet.</p>
+  {% endif %}
+</div>
+
+{% if confirmed_run and clocks %}
+<div class="card">
+  <h3>Deadline clocks</h3>
+  {% for fw, clock in clocks.items() %}
+  <h4>{{ fw.upper() }}</h4>
+  <table>
+    <thead><tr><th>Milestone</th><th>Due (UTC)</th><th>Basis</th></tr></thead>
+    <tbody>
+      {% for d in clock.deadlines %}
+      <tr>
+        <td>{{ d.label }}{% if d.provisional %} <em>(provisional)</em>{% endif %}</td>
+        <td class="deadline {{ 'overdue' if d.due_at < now }}">{{ d.due_at.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td style="font-size:0.82rem;color:#64748b">{{ d.basis }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if available_stages %}
+<div class="card">
+  <h3>Draft notifications</h3>
+  {% for fw, stages in available_stages.items() %}
+  <h4>{{ fw.upper() }}</h4>
+  <div class="btn-row" style="margin-bottom:16px">
+    {% for stage in stages %}
+    <form method="post" action="/incidents/{{ incident.id }}/drafts">
+      <input type="hidden" name="framework" value="{{ fw }}">
+      <input type="hidden" name="stage" value="{{ stage }}">
+      <button class="btn secondary" type="submit">Generate {{ stage.replace(fw + '_', '').replace('_',' ') }}</button>
+    </form>
+    {% endfor %}
+  </div>
+  {% endfor %}
+
+  {% for draft in incident.drafts|sort(attribute='created_at', reverse=True) %}
+  <div class="card" style="background:#f8fafc">
+    <strong>{{ draft.framework.upper() }} &middot; {{ draft.stage.value }} v{{ draft.version }}</strong>
+    <span class="badge badge-{{ 'confirmed' if draft.status.value == 'exported' else 'pending_confirmation' }}">{{ draft.status.value }}</span>
+    <p style="font-size:0.8rem;color:#64748b">
+      Model: {{ draft.model_used }} &middot; {{ draft.placeholders|length }} open placeholder(s)
+      {% if draft.exported_at %} &middot; exported {{ draft.exported_format|upper }} at {{ draft.exported_at.strftime('%Y-%m-%d %H:%M UTC') }}{% endif %}
+    </p>
+    <details>
+      <summary style="cursor:pointer">View / edit content</summary>
+      <form method="post" action="/incidents/{{ incident.id }}/drafts/{{ draft.id }}/edit">
+        <textarea name="content" rows="18">{{ draft.content }}</textarea>
+        <button class="btn secondary" type="submit">Save edits</button>
+      </form>
+    </details>
+    <div class="btn-row">
+      <form method="post" action="/incidents/{{ incident.id }}/drafts/{{ draft.id }}/export">
+        <input type="hidden" name="fmt" value="pdf">
+        <button class="btn" type="submit">Export PDF</button>
+      </form>
+      <form method="post" action="/incidents/{{ incident.id }}/drafts/{{ draft.id }}/export">
+        <input type="hidden" name="fmt" value="docx">
+        <button class="btn" type="submit">Export DOCX</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="card">
+  <h3>Audit trail</h3>
+  <p><a href="/api/incidents/{{ incident.id }}/audit/export">Download machine-verifiable JSON export</a></p>
+  <ul class="timeline">
+    {% for e in events %}
+    <li><span class="ts">{{ e.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</span>
+      <strong>{{ e.actor_label }}</strong> &mdash; {{ e.summary }}</li>
+    {% endfor %}
+  </ul>
+</div>
+
+{% endblock %}

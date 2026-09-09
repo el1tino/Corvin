@@ -1,0 +1,36 @@
+# DORA Intermediate Report — Major ICT-Related Incident
+
+**Entity:** {{ customer.entity_name | ph('entity legal name') }}
+**Competent Authority:** {{ customer.dora_authority_name | ph('DORA competent authority name') }}
+**Authority Contact:** {{ customer.dora_authority_contact | ph('DORA competent authority contact details') }}
+
+## Incident Reference
+- Internal incident ID: {{ incident.id }}
+- Incident title: {{ incident.title }}
+- Initial notification sent (UTC): {{ facts.get('dora_initial_notification_sent_at') | ph('date/time the initial notification was actually sent') }}
+
+## Status Update
+{{ facts.get('dora_status_update') | ph('a narrative update on the status of the incident since the initial notification') }}
+
+## Root Cause (if known)
+{{ facts.get('dora_root_cause') | ph('root cause analysis, or a statement that it is still under investigation') }}
+
+## Actions Taken
+{{ facts.get('dora_mitigating_actions') | ph('mitigating and remediation actions taken so far') }}
+
+## Updated Impact Assessment
+- Clients affected: {{ facts.get('affected_clients_pct') | ph('updated percentage of clients affected') }}%
+- Downtime (cumulative, minutes): {{ facts.get('downtime_minutes') | ph('updated cumulative downtime in minutes') }}
+- Estimated economic impact: EUR {{ facts.get('economic_impact_amount_eur') | ph('updated estimated economic impact in EUR') }}
+
+## Statutory Deadline
+- Intermediate report due (UTC): {{ deadline_due_at | ph('intermediate report due date (72h from the initial notification)') }}
+- Basis: {{ deadline_basis | ph('deadline basis') }}
+
+## Confirmation
+This report was reviewed and confirmed by: {{ confirmed_by | ph('name and role of the confirming officer') }}
+
+---
+*This is a DRAFT prepared for human review by Corvin. It must be reviewed, completed and submitted by an
+authorized representative of {{ customer.entity_name | ph('entity legal name') }}. Corvin does not submit
+notifications to any authority on the entity's behalf.*
