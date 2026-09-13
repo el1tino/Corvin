@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Corvin{% endblock %} · Corvin</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="/dashboard">Corvin</a>
-    <span class="tagline">Compliance-aware incident-response orchestrator</span>
+    <span class="tagline">Compliance-aware incident-response orchestrator{% if entity_name %} &middot; {{ entity_name }}{% endif %}</span>
     {% if user %}
       <nav class="topnav">
         <span class="whoami">{{ user.full_name }} &middot; {{ user.role.value }}</span>
@@ -29,8 +30,8 @@
     {% block content %}{% endblock %}
   </main>
   <footer class="footer">
-    Data residency: EU. Every screen here is decision support -- a named human must confirm
-    classification before any clock or draft is authoritative.
+    Data residency: EU &middot; Times shown in {{ tz }} &middot; Every screen is decision support:
+    a named human must confirm classification before any clock or draft is authoritative.
   </footer>
 </body>
 </html>

@@ -9,10 +9,10 @@ from ..database import Base
 from .base import Timestamped, UUIDPk
 
 
-class Role(str, enum.Enum):
-    ANALYST = "analyst"       # SOC analyst / security lead: confirms incidents
+class Role(enum.StrEnum):
+    ANALYST = "analyst"  # SOC analyst / security lead: confirms incidents
     COMPLIANCE = "compliance"  # GRC lead / DPO: owns regulatory filings
-    ADMIN = "admin"            # tunes rules, manages users and customer config
+    ADMIN = "admin"  # tunes rules, manages users and customer config
 
 
 class User(Base, UUIDPk, Timestamped):

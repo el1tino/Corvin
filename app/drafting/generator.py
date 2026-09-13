@@ -4,16 +4,15 @@ by an LLM under a hard grounding constraint.
 
 Why deterministic-first: the build spec requires the LLM to "receive only
 the incident's structured data and the template", "not invent facts", and
-"leave a visible placeholder wherever information is missing". The
-surest way to guarantee zero hallucinated facts is to not depend on the LLM
-to *decide* what the facts are in the first place -- Jinja2 fills every
-field itself, verbatim from the incident's own data, and marks anything
-missing with a `[PLACEHOLDER: ...]` marker before the LLM ever sees the
-document. The LLM's only job, when available, is to smooth the resulting
-prose without touching any placeholder or fact. If no LLM is configured
-(or the EU-residency guard blocks it), the deterministic draft is the
-final output -- a fully functional mode, not a degraded one.
+"leave a visible placeholder wherever information is missing". The surest
+way to guarantee zero hallucinated facts is to not let the LLM decide what
+the facts are: Jinja2 fills every field itself, verbatim from the
+incident's own data, and marks anything missing with a `[PLACEHOLDER: ...]`
+marker before the LLM ever sees the document. The LLM's only job, when
+available, is to smooth prose without touching any placeholder or fact --
+and its output is rejected if the placeholder set changes.
 """
+
 from __future__ import annotations
 
 import re
@@ -23,31 +22,11 @@ from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
-from .llm_client import LLMClient, NonEuLlmBlocked
+from .llm_client import LLMClient, LLMUnavailable, NonEuLlmBlocked
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
-
 PLACEHOLDER_PATTERN = re.compile(r"\[PLACEHOLDER: [^\]]+\]")
-
-
-def _placeholder(value: Any, description: str) -> str:
-    if value is None or value == "":
-        return f"[PLACEHOLDER: {description}]"
-    return str(value)
-
-
-def _build_env() -> Environment:
-    env = Environment(
-        loader=FileSystemLoader(str(TEMPLATES_DIR)),
-        undefined=StrictUndefined,
-        trim_blocks=True,
-        lstrip_blocks=True,
-    )
-    env.filters["ph"] = _placeholder
-    return env
-
-
-_ENV = _build_env()
+DETERMINISTIC_MODEL_LABEL = "deterministic-template"
 
 TEMPLATE_BY_STAGE = {
     "dora_initial": "dora_initial.md.j2",
@@ -59,7 +38,7 @@ TEMPLATE_BY_STAGE = {
     "gdpr_article_33": "gdpr_article33.md.j2",
 }
 
-_POLISH_SYSTEM_PROMPT = """\
+POLISH_SYSTEM_PROMPT = """\
 You are polishing the prose of a regulatory incident notification for readability only.
 
 Hard rules, no exceptions:
@@ -74,31 +53,45 @@ regulatory audience, and correct grammar.
 """
 
 
+def _placeholder(value: Any, description: str) -> str:
+    if value is None or value == "":
+        return f"[PLACEHOLDER: {description}]"
+    return str(value)
+
+
+def _build_env() -> Environment:
+    env = Environment(
+        loader=FileSystemLoader(str(TEMPLATES_DIR)),
+        undefined=StrictUndefined,
+        trim_blocks=True,
+        lstrip_blocks=True,
+        autoescape=False,  # output is Markdown for DOCX/PDF export, never rendered as HTML
+    )
+    env.filters["ph"] = _placeholder
+    return env
+
+
+_ENV = _build_env()
+
+
 @dataclass
 class DraftResult:
     content: str
     placeholders: list[str]
-    prompt_used: str
     model_used: str
+    prompt_used: str
+    llm_note: str  # human-readable provenance: what the LLM did, or why it wasn't used
 
 
 def render_deterministic(stage: str, context: dict[str, Any]) -> str:
     template_name = TEMPLATE_BY_STAGE.get(stage)
     if template_name is None:
         raise ValueError(f"Unknown draft stage: {stage!r}")
-    template = _ENV.get_template(template_name)
-    return template.render(**context)
+    return _ENV.get_template(template_name).render(**context)
 
 
 def extract_placeholders(content: str) -> list[str]:
     return sorted(set(PLACEHOLDER_PATTERN.findall(content)))
-
-
-def _validate_llm_output(original: str, polished: str) -> bool:
-    """Refuse an LLM revision that dropped or altered a placeholder --
-    that would mean it silently "resolved" missing information, which is
-    exactly what the grounding rule forbids."""
-    return extract_placeholders(original) == extract_placeholders(polished)
 
 
 def generate_draft(
@@ -106,45 +99,45 @@ def generate_draft(
     stage: str,
     context: dict[str, Any],
     llm_client: LLMClient | None,
-    model_label: str = "deterministic-template",
+    llm_note: str | None = None,
 ) -> DraftResult:
+    """Render the deterministic draft, then optionally polish it.
+
+    `llm_note` lets the caller pass through why no client was supplied
+    (e.g. the EU-residency guard fired) so the reason lands in the draft's
+    provenance and the audit trail rather than being lost.
+    """
     deterministic = render_deterministic(stage, context)
     placeholders = extract_placeholders(deterministic)
 
-    if llm_client is None:
+    def fallback(note: str) -> DraftResult:
         return DraftResult(
             content=deterministic,
             placeholders=placeholders,
-            prompt_used="(no LLM configured -- deterministic template only)",
-            model_used=model_label,
+            model_used=DETERMINISTIC_MODEL_LABEL,
+            prompt_used="",
+            llm_note=note,
         )
+
+    if llm_client is None:
+        return fallback(llm_note or "No LLM configured; deterministic template only.")
 
     try:
-        polished = llm_client.complete(system=_POLISH_SYSTEM_PROMPT, user=deterministic)
-    except NonEuLlmBlocked:
-        return DraftResult(
-            content=deterministic,
-            placeholders=placeholders,
-            prompt_used="(LLM blocked by EU data-residency guard -- deterministic template only)",
-            model_used=model_label,
-        )
+        polished = llm_client.complete(system=POLISH_SYSTEM_PROMPT, user=deterministic)
+    except NonEuLlmBlocked as exc:
+        return fallback(f"LLM blocked by EU data-residency guard: {exc}")
+    except LLMUnavailable as exc:
+        return fallback(f"LLM unavailable ({exc}); deterministic template only.")
 
-    if not _validate_llm_output(deterministic, polished):
-        # Fail safe to the deterministic draft rather than risk a
-        # hallucinated or dropped fact reaching a regulator.
-        return DraftResult(
-            content=deterministic,
-            placeholders=placeholders,
-            prompt_used=(
-                "(LLM output rejected: placeholder set changed -- fell back to "
-                "deterministic template)"
-            ),
-            model_used=model_label,
-        )
+    if extract_placeholders(polished) != placeholders:
+        # The model resolved, dropped, or altered a placeholder -- exactly
+        # what the grounding rule forbids. Fail safe to the deterministic text.
+        return fallback("LLM output rejected: placeholder set changed; deterministic template only.")
 
     return DraftResult(
         content=polished,
-        placeholders=extract_placeholders(polished),
-        prompt_used=_POLISH_SYSTEM_PROMPT,
-        model_used=getattr(llm_client, "model", model_label),
+        placeholders=placeholders,
+        model_used=llm_client.model,
+        prompt_used=POLISH_SYSTEM_PROMPT,
+        llm_note=f"Prose polished by {llm_client.model}; all placeholders preserved.",
     )

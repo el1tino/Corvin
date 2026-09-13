@@ -7,6 +7,7 @@ mechanics with minimal synthetic facts) -- these fixtures are meant to read
 as incidents a real SOC analyst would recognize, and to double as sample
 payloads for manual testing of the webhook/manual-intake path.
 """
+
 import json
 from pathlib import Path
 
@@ -26,8 +27,7 @@ def test_fixture_matches_expected_classification(fixture_path):
     evaluations = evaluate_all(fixture["facts"], RULESETS)
     actual = {fw: ev.result.value for fw, ev in evaluations.items()}
     assert actual == fixture["expected"], (
-        f"{fixture_path.name}: expected {fixture['expected']}, got {actual}\n"
-        f"Title: {fixture['title']}"
+        f"{fixture_path.name}: expected {fixture['expected']}, got {actual}\nTitle: {fixture['title']}"
     )
 
 
@@ -47,6 +47,6 @@ def test_all_six_required_scenarios_are_present():
 def test_needs_human_input_fixture_reports_missing_fields_for_every_framework():
     fixture = json.loads((FIXTURES_DIR / "incident_needs_human_input.json").read_text())
     evaluations = evaluate_all(fixture["facts"], RULESETS)
-    for framework, evaluation in evaluations.items():
+    for evaluation in evaluations.values():
         assert evaluation.result is Result.NEEDS_HUMAN_INPUT
         assert len(evaluation.missing_fields) > 0

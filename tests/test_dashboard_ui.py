@@ -2,6 +2,7 @@
 covering the same demo walkthrough as test_smoke_e2e but through the HTML
 form-post routes a human actually clicks, not the JSON API.
 """
+
 import os
 
 os.environ.setdefault("JWT_SECRET_KEY", "test-secret")
@@ -51,7 +52,9 @@ def client(tmp_path, monkeypatch):
 
 
 def test_dashboard_login_and_create_incident_flow(client):
-    resp = client.post("/login", data={"username": "cara@example.com", "password": "password123"}, follow_redirects=False)
+    resp = client.post(
+        "/login", data={"username": "cara@example.com", "password": "password123"}, follow_redirects=False
+    )
     assert resp.status_code == 303
     assert resp.headers["location"] == "/dashboard"
     assert "corvin_session" in resp.cookies

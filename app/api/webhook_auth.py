@@ -5,6 +5,7 @@ as a single process (see docker-compose.yml), so an in-memory sliding
 window is sufficient; if this is ever scaled to multiple workers, swap the
 counter for a shared store (e.g. Redis) without changing the call site.
 """
+
 from __future__ import annotations
 
 import hmac
@@ -21,7 +22,9 @@ _request_log: deque[float] = deque()
 def verify_webhook_token(x_webhook_token: str | None = Header(default=None)) -> None:
     settings = get_settings()
     if x_webhook_token is None or not hmac.compare_digest(x_webhook_token, settings.webhook_token):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or missing webhook token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or missing webhook token"
+        )
 
 
 def enforce_rate_limit() -> None:

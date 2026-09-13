@@ -3,20 +3,33 @@
 {% block content %}
 
 <div class="card">
-  <h2>{{ incident.title }} <span class="badge badge-{{ incident.status.value }}">{{ incident.status.value.replace('_',' ') }}</span></h2>
-  <p>{{ incident.description or "(no description)" }}</p>
-  <p style="color:#64748b;font-size:0.85rem">
-    Source: {{ incident.source.value }}{% if incident.source_system %} &middot; {{ incident.source_system }}{% endif %}
-    {% if incident.source_reference %} &middot; ref {{ incident.source_reference }}{% endif %}
-    &middot; created {{ incident.created_at.strftime('%Y-%m-%d %H:%M UTC') }}
-  </p>
-  <p>
-    <strong>Detected at:</strong> {{ incident.detected_at.strftime('%Y-%m-%d %H:%M UTC') if incident.detected_at else '(unknown)' }}
-    &nbsp;&middot;&nbsp;
-    <strong>Awareness at:</strong> {{ incident.awareness_at.strftime('%Y-%m-%d %H:%M UTC') if incident.awareness_at else '(unknown)' }}
-    &nbsp;&middot;&nbsp;
-    <strong>Classified-as-major at:</strong> {{ incident.classification_confirmed_at.strftime('%Y-%m-%d %H:%M UTC') if incident.classification_confirmed_at else '(not yet confirmed)' }}
-  </p>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
+    <div>
+      <h2 style="margin-top:0">{{ incident.title }}
+        <span class="badge badge-{{ incident.status.value }}">{{ incident.status.value.replace('_',' ') }}</span></h2>
+      <p>{{ incident.description or "(no description)" }}</p>
+      <p class="muted">
+        Source: {{ incident.source.value }}{% if incident.source_system %} &middot; {{ incident.source_system }}{% endif %}
+        {% if incident.source_reference %} &middot; ref {{ incident.source_reference }}{% endif %}
+        &middot; created {{ incident.created_at|localtime(tz) }}
+      </p>
+    </div>
+    {% if incident.status.value != 'closed' %}
+    <form method="post" action="/incidents/{{ incident.id }}/close"
+          onsubmit="return confirm('Close this incident? It stays in the audit trail and can no longer be edited here.')">
+      <button class="btn secondary" type="submit" style="margin-top:0">Close incident</button>
+    </form>
+    {% endif %}
+  </div>
+  <dl class="kv">
+    <dt>Detected</dt><dd>{{ incident.detected_at|localtime(tz) }}</dd>
+    <dt>Awareness</dt><dd>{{ incident.awareness_at|localtime(tz) }}</dd>
+    <dt>Classified as reportable</dt>
+    <dd>{{ incident.classification_confirmed_at|localtime(tz) }}
+      {% if incident.confirmed_by %} by {{ incident.confirmed_by.display_label() }}{% endif %}</dd>
+  </dl>
+  <p class="muted" style="margin-bottom:0">Three distinct timestamps on purpose: DORA's clocks run from classification (capped
+    at 24h from awareness), NIS2's and GDPR's from awareness.</p>
 </div>
 
 <div class="card">
@@ -30,7 +43,7 @@
     </tbody>
   </table>
   {% else %}
-  <p>No facts recorded yet.</p>
+  <p>No facts recorded yet &mdash; the engine will report every framework as "needs human input".</p>
   {% endif %}
 
   <details>
@@ -59,6 +72,8 @@
           <input type="number" name="member_states_affected_count" value="{{ incident.facts.get('member_states_affected_count', '') }}">
           <label>Estimated economic impact (EUR)</label>
           <input type="number" name="economic_impact_amount_eur" value="{{ incident.facts.get('economic_impact_amount_eur', '') }}">
+          <label>Data subjects affected (count)</label>
+          <input type="number" name="data_subjects_affected_count" value="{{ incident.facts.get('data_subjects_affected_count', '') }}">
         </div>
         <div>
           <div class="checkbox-row"><input type="checkbox" name="data_loss_confidentiality" {{ 'checked' if incident.facts.get('data_loss_confidentiality') }}><label style="margin:0">Data loss: confidentiality</label></div>
@@ -86,14 +101,14 @@
 
   {% if latest_run %}
     {% if facts_changed_since_run %}
-      <p class="flash flash-error">Facts have changed since this run -- re-run classification before confirming.</p>
+      <p class="flash flash-error">Facts have changed since this run &mdash; re-run classification before confirming.</p>
     {% endif %}
     <div class="grid" style="margin-top:16px">
       {% for fw, result in latest_run.results.items() %}
       <div class="card" style="margin-bottom:0">
         <strong>{{ fw.upper() }}</strong>
         <span class="badge badge-{{ result.result }}">{{ result.result.replace('_',' ') }}</span>
-        <p style="font-size:0.85rem">{{ result.label }} (ruleset v{{ latest_run.ruleset_versions.get(fw) }})</p>
+        <p style="font-size:0.85rem">{{ result.label }} <span class="muted">(ruleset v{{ latest_run.ruleset_versions.get(fw) }})</span></p>
         <ul class="explanations">
           {% for line in result.explanations %}
           <li>{{ line }}</li>
@@ -109,13 +124,14 @@
       <button class="btn" type="submit" {{ 'disabled' if facts_changed_since_run }}>
         I confirm this classification (named sign-off)
       </button>
-      <p style="font-size:0.8rem;color:#64748b">
+      <p class="muted">
         Confirming as {{ user.full_name }} ({{ user.role.value }}) records your name and the exact time.
-        This is required before any clock or draft becomes authoritative.
+        Nothing below becomes authoritative until this is done.
       </p>
     </form>
     {% else %}
-      <p style="margin-top:12px">Confirmed by <strong>{{ latest_run.confirmed_by.display_label() }}</strong> at {{ latest_run.confirmed_at.strftime('%Y-%m-%d %H:%M UTC') }}.</p>
+      <p style="margin-top:12px">Confirmed by <strong>{{ latest_run.confirmed_by.display_label() }}</strong>
+        at {{ latest_run.confirmed_at|localtime(tz) }}.</p>
     {% endif %}
   {% else %}
     <p style="margin-top:12px">No classification run yet.</p>
@@ -126,19 +142,28 @@
 <div class="card">
   <h3>Deadline clocks</h3>
   {% for fw, clock in clocks.items() %}
-  <h4>{{ fw.upper() }}</h4>
+  <h4>{{ fw.upper() }}{% if clock.capped_by_24h_rule is defined and clock.capped_by_24h_rule %}
+    <span class="badge badge-needs_human_input">24h cap applied</span>{% endif %}</h4>
   <table>
-    <thead><tr><th>Milestone</th><th>Due (UTC)</th><th>Basis</th></tr></thead>
+    <thead><tr><th>Milestone</th><th>Due ({{ tz }})</th><th>Remaining</th><th>Basis</th></tr></thead>
     <tbody>
       {% for d in clock.deadlines %}
+      {% set remaining = d.due_at - now %}
       <tr>
-        <td>{{ d.label }}{% if d.provisional %} <em>(provisional)</em>{% endif %}</td>
-        <td class="deadline {{ 'overdue' if d.due_at < now }}">{{ d.due_at.strftime('%Y-%m-%d %H:%M') }}</td>
-        <td style="font-size:0.82rem;color:#64748b">{{ d.basis }}</td>
+        <td>{{ d.label }}{% if d.provisional %} <em class="muted">(provisional)</em>{% endif %}</td>
+        <td class="deadline {{ 'overdue' if d.due_at < now }}">{{ d.due_at|localtime(tz) }}</td>
+        <td class="deadline {{ 'overdue' if d.due_at < now }}">
+          {% if d.due_at < now %}overdue{% else %}{{ (remaining.total_seconds() // 3600)|int }}h {{ ((remaining.total_seconds() % 3600) // 60)|int }}m{% endif %}
+        </td>
+        <td class="muted" style="font-size:0.82rem">{{ d.basis }}</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
+  {% if clock.data_subject_notification_required is defined and clock.data_subject_notification_required %}
+  <p class="flash flash-error" style="margin-top:8px">Assessed as high risk to individuals: data subjects must be informed
+    without undue delay (Art. 34). No fixed statutory deadline &mdash; treat as an open action.</p>
+  {% endif %}
   {% endfor %}
 </div>
 {% endif %}
@@ -146,6 +171,8 @@
 {% if available_stages %}
 <div class="card">
   <h3>Draft notifications</h3>
+  <p class="muted">Drafts are filled verbatim from the facts above; anything unknown is left as a visible
+    <code>[PLACEHOLDER]</code>. A human reviews, exports, submits &mdash; and records the submission so dependent clocks run from the real time.</p>
   {% for fw, stages in available_stages.items() %}
   <h4>{{ fw.upper() }}</h4>
   <div class="btn-row" style="margin-bottom:16px">
@@ -162,10 +189,11 @@
   {% for draft in incident.drafts|sort(attribute='created_at', reverse=True) %}
   <div class="card" style="background:#f8fafc">
     <strong>{{ draft.framework.upper() }} &middot; {{ draft.stage.value }} v{{ draft.version }}</strong>
-    <span class="badge badge-{{ 'confirmed' if draft.status.value == 'exported' else 'pending_confirmation' }}">{{ draft.status.value }}</span>
-    <p style="font-size:0.8rem;color:#64748b">
-      Model: {{ draft.model_used }} &middot; {{ draft.placeholders|length }} open placeholder(s)
-      {% if draft.exported_at %} &middot; exported {{ draft.exported_format|upper }} at {{ draft.exported_at.strftime('%Y-%m-%d %H:%M UTC') }}{% endif %}
+    <span class="badge badge-{{ 'confirmed' if draft.status.value in ('exported', 'submitted') else 'pending_confirmation' }}">{{ draft.status.value }}</span>
+    <p class="muted">
+      Text: {{ draft.model_used }} &middot; {{ draft.placeholders|length }} open placeholder(s)
+      {% if draft.exported_at %} &middot; exported {{ draft.exported_format|upper }} {{ draft.exported_at|localtime(tz) }}{% endif %}
+      {% if draft.submitted_at %} &middot; <strong>submitted {{ draft.submitted_at|localtime(tz) }}</strong>{% endif %}
     </p>
     <details>
       <summary style="cursor:pointer">View / edit content</summary>
@@ -183,6 +211,12 @@
         <input type="hidden" name="fmt" value="docx">
         <button class="btn" type="submit">Export DOCX</button>
       </form>
+      {% if not draft.submitted_at %}
+      <form method="post" action="/incidents/{{ incident.id }}/drafts/{{ draft.id }}/submitted"
+            onsubmit="return confirm('Record that this draft was submitted to the authority now?')">
+        <button class="btn secondary" type="submit">Record as submitted</button>
+      </form>
+      {% endif %}
     </div>
   </div>
   {% endfor %}
@@ -191,11 +225,13 @@
 
 <div class="card">
   <h3>Audit trail</h3>
-  <p><a href="/api/incidents/{{ incident.id }}/audit/export">Download machine-verifiable JSON export</a></p>
+  <p><a href="/api/incidents/{{ incident.id }}/audit/export">Download machine-verifiable JSON export</a>
+    <span class="muted">&mdash; every event below is hash-chained to the one before it.</span></p>
   <ul class="timeline">
     {% for e in events %}
-    <li><span class="ts">{{ e.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</span>
-      <strong>{{ e.actor_label }}</strong> &mdash; {{ e.summary }}</li>
+    <li><span class="ts">{{ e.created_at|localtime(tz, '%Y-%m-%d %H:%M:%S') }}</span>
+      <strong>{{ e.actor_label }}</strong> &mdash; {{ e.summary.removeprefix(e.actor_label ~ ' ') }}
+      <span class="hash" title="{{ e.hash }}">{{ e.hash[:12] }}</span></li>
     {% endfor %}
   </ul>
 </div>

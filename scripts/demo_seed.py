@@ -7,6 +7,7 @@ rows that don't already exist.
 
 Usage: python -m scripts.demo_seed
 """
+
 from __future__ import annotations
 
 from app.auth.security import hash_password
@@ -29,7 +30,14 @@ def main() -> None:
         for email, full_name, role in DEMO_USERS:
             existing = db.query(User).filter(User.email == email).one_or_none()
             if existing is None:
-                db.add(User(email=email, full_name=full_name, role=role, hashed_password=hash_password(DEMO_PASSWORD)))
+                db.add(
+                    User(
+                        email=email,
+                        full_name=full_name,
+                        role=role,
+                        hashed_password=hash_password(DEMO_PASSWORD),
+                    )
+                )
                 print(f"Created demo user: {email} / {DEMO_PASSWORD} ({role.value})")
 
         config = db.get(CustomerConfig, SINGLETON_ID)

@@ -1,5 +1,5 @@
-from .engine import evaluate_framework, evaluate_all
-from .loader import load_ruleset, load_all_rulesets
+from .engine import evaluate_all, evaluate_framework
+from .loader import load_all_rulesets, load_ruleset
 from .models import (
     Condition,
     FrameworkEvaluation,

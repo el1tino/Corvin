@@ -6,9 +6,10 @@ Route handlers must always go through `append_event` rather than
 constructing `AuditEvent` rows themselves, so the hash chain can never be
 built incorrectly by an ad-hoc insert.
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import select
@@ -39,7 +40,7 @@ def append_event(
     ).scalar_one_or_none()
     prev_hash = last.hash if last else GENESIS_HASH
     next_seq = (last.seq + 1) if last else 1
-    created_at = datetime.now(timezone.utc)
+    created_at = datetime.now(UTC)
 
     event_hash = compute_event_hash(
         prev_hash=prev_hash,

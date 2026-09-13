@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import enum
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import JSON, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -10,8 +11,12 @@ from ..database import Base
 from .base import Timestamped, UUIDPk
 from .types import UTCDateTime
 
+if TYPE_CHECKING:
+    from .incident import Incident
+    from .user import User
 
-class DraftStage(str, enum.Enum):
+
+class DraftStage(enum.StrEnum):
     DORA_INITIAL = "dora_initial"
     DORA_INTERMEDIATE = "dora_intermediate"
     DORA_FINAL = "dora_final"
@@ -21,10 +26,11 @@ class DraftStage(str, enum.Enum):
     GDPR_ARTICLE_33 = "gdpr_article_33"
 
 
-class DraftStatus(str, enum.Enum):
+class DraftStatus(enum.StrEnum):
     GENERATED = "generated"
     EDITED = "edited"
     EXPORTED = "exported"
+    SUBMITTED = "submitted"  # a human sent it to the authority and recorded when
 
 
 class Draft(Base, UUIDPk, Timestamped):
@@ -55,6 +61,9 @@ class Draft(Base, UUIDPk, Timestamped):
     created_by_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     exported_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
     exported_format: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    # Corvin never submits anything itself; a human records that they did.
+    # DORA's intermediate/final clocks run from this moment, not from awareness.
+    submitted_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
 
-    incident: Mapped["Incident"] = relationship(back_populates="drafts")
-    created_by: Mapped["User | None"] = relationship()
+    incident: Mapped[Incident] = relationship(back_populates="drafts")
+    created_by: Mapped[User | None] = relationship()

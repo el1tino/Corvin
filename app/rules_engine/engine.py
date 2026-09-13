@@ -7,6 +7,7 @@ the three verdicts the build spec requires: reportable, not_reportable, or
 needs_human_input -- always alongside which rules fired and which fields
 are still missing, in plain language.
 """
+
 from __future__ import annotations
 
 from .models import FrameworkEvaluation, IncidentFacts, Result, RuleSet, Tri
@@ -73,9 +74,7 @@ def evaluate_framework(facts: IncidentFacts, ruleset: RuleSet) -> FrameworkEvalu
     )
 
 
-def evaluate_all(
-    facts: IncidentFacts, rulesets: dict[str, RuleSet]
-) -> dict[str, FrameworkEvaluation]:
+def evaluate_all(facts: IncidentFacts, rulesets: dict[str, RuleSet]) -> dict[str, FrameworkEvaluation]:
     """Evaluate every framework's ruleset against one incident's facts.
 
     Frameworks are independent by design (see build spec overlap handling):

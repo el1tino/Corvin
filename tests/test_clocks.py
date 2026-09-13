@@ -1,10 +1,12 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
+
+from dateutil.relativedelta import relativedelta
 
 from app.clocks import compute_dora_clock, compute_gdpr_clock, compute_nis2_clock
 from app.clocks.utils import is_overdue, to_local
 
-UTC = timezone.utc
+UTC = UTC
 
 
 def dl(clock, label):
@@ -37,9 +39,7 @@ def test_dora_intermediate_and_final_run_from_previous_report_not_awareness():
     awareness = datetime(2026, 1, 1, 0, 0, tzinfo=UTC)
     classification = datetime(2026, 1, 1, 1, 0, tzinfo=UTC)
     actual_initial_sent = datetime(2026, 1, 1, 5, 0, tzinfo=UTC)  # later than the 4h due date
-    clock = compute_dora_clock(
-        awareness, classification, initial_notification_sent_at=actual_initial_sent
-    )
+    clock = compute_dora_clock(awareness, classification, initial_notification_sent_at=actual_initial_sent)
     intermediate = dl(clock, "Intermediate report")
     # 72h from the actual send time, not from awareness and not from the due date.
     assert intermediate.due_at == actual_initial_sent + timedelta(hours=72)
@@ -49,7 +49,7 @@ def test_dora_intermediate_and_final_run_from_previous_report_not_awareness():
     # No intermediate report sent yet -> provisional, projected off the
     # intermediate deadline, one calendar month later.
     assert final.provisional
-    assert final.due_at.month == (intermediate.due_at.month % 12) + 1 or final.due_at.year > intermediate.due_at.year
+    assert final.due_at == intermediate.due_at + relativedelta(months=1)
 
 
 def test_dora_final_report_uses_calendar_month_not_thirty_days():
@@ -126,7 +126,9 @@ def test_dst_spring_forward_local_display_does_not_corrupt_utc_duration():
     # underlying UTC gap is fixed -- proof the app must never do the +72h
     # arithmetic in local time.
     assert local_awareness.utcoffset() != local_due.utcoffset()
-    assert local_awareness.tzinfo is not None and isinstance(local_due.tzinfo, type(ZoneInfo("Europe/Brussels")))
+    assert local_awareness.tzinfo is not None and isinstance(
+        local_due.tzinfo, type(ZoneInfo("Europe/Brussels"))
+    )
 
 
 def test_naive_timestamp_is_rejected_rather_than_silently_assumed_utc():

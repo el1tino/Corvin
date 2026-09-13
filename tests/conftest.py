@@ -3,6 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.database import Base
+
 # Import every model module so they're registered on Base's mapper registry
 # before create_all() / relationship configuration runs.
 from app.models import (  # noqa: F401

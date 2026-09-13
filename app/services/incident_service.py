@@ -4,9 +4,10 @@ JSON API and the dashboard's form posts) call into this module rather than
 touching models or the rules engine directly, so webhook intake and manual
 intake stay behavior-identical.
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import select
@@ -57,7 +58,11 @@ def create_incident(
         event_type="incident.created",
         summary=f"Incident '{title}' created via {source.value}"
         + (f" ({source_system})" if source_system else ""),
-        payload={"source": source.value, "source_system": source_system, "source_reference": source_reference},
+        payload={
+            "source": source.value,
+            "source_system": source_system,
+            "source_reference": source_reference,
+        },
         incident_id=incident.id,
         actor_id=created_by.id if created_by else None,
         actor_label=created_by.display_label() if created_by else f"webhook:{source_system or 'unknown'}",
@@ -158,11 +163,14 @@ def confirm_classification(db: Session, incident: Incident, run_id: str, actor: 
             "Incident facts have changed since this classification run; re-run classification first"
         )
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     run.is_confirmed = True
     run.confirmed_by_id = actor.id
     run.confirmed_at = now
     incident.status = IncidentStatus.CONFIRMED
+    incident.confirmed_by_id = actor.id
+    # The first confirmation is the DORA "classified as major" moment that
+    # starts its 4-hour clock; a later re-confirmation must not reset it.
     if incident.classification_confirmed_at is None:
         incident.classification_confirmed_at = now
     db.flush()
@@ -179,6 +187,25 @@ def confirm_classification(db: Session, incident: Incident, run_id: str, actor: 
     db.commit()
     db.refresh(run)
     return run
+
+
+def close_incident(db: Session, incident: Incident, *, actor: User, reason: str = "") -> Incident:
+    if incident.status is IncidentStatus.CLOSED:
+        return incident
+    incident.status = IncidentStatus.CLOSED
+    db.flush()
+    append_event(
+        db,
+        event_type="incident.closed",
+        summary=f"{actor.display_label()} closed the incident" + (f": {reason}" if reason else ""),
+        payload={"reason": reason},
+        incident_id=incident.id,
+        actor_id=actor.id,
+        actor_label=actor.display_label(),
+    )
+    db.commit()
+    db.refresh(incident)
+    return incident
 
 
 def latest_classification_run(incident: Incident) -> ClassificationRun | None:

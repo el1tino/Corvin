@@ -1,11 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
-<div class="card">
-  <h2>Open incidents</h2>
-  {% if not rows %}
-    <p>No incidents yet. <a href="/incidents/new">Create one</a> or send a test webhook (see README).</p>
-  {% else %}
+{% macro incident_table(rows) %}
   <table>
     <thead>
       <tr>
@@ -20,27 +16,46 @@
       <tr onclick="window.location='/incidents/{{ row.incident.id }}'" style="cursor:pointer">
         <td>
           <strong>{{ row.incident.title }}</strong><br>
-          <span style="color:#64748b;font-size:0.82rem">{{ row.incident.source_system or row.incident.source.value }}</span>
+          <span class="muted">{{ row.incident.source_system or row.incident.source.value }}
+            &middot; {{ row.incident.created_at|localtime(tz) }}</span>
         </td>
         <td><span class="badge badge-{{ row.incident.status.value }}">{{ row.incident.status.value.replace('_', ' ') }}</span></td>
         <td>
-          {% for fw, label in row.frameworks.items() %}
-            <span class="badge badge-{{ label.result }}" title="{{ label.label }}">{{ fw.upper() }}</span>
+          {% for fw, r in row.frameworks.items() %}
+            <span class="badge badge-{{ r.result }}" title="{{ r.label }}">{{ fw.upper() }}</span>
+          {% else %}
+            <span class="muted">not classified</span>
           {% endfor %}
         </td>
         <td>
           {% if row.nearest_deadline %}
-            <span class="deadline {{ 'overdue' if row.is_overdue else '' }}">
-              {{ row.nearest_deadline.label }}: {{ row.nearest_deadline.due_at.strftime('%Y-%m-%d %H:%M UTC') }}
+            <span class="deadline {{ 'overdue' if row.is_overdue }}">
+              {{ row.nearest_deadline.label }}: {{ row.nearest_deadline.due_at|localtime(tz) }}
+              {% if row.is_overdue %}&middot; OVERDUE{% endif %}
             </span>
           {% else %}
-            <span style="color:#94a3b8">--</span>
+            <span class="muted">&mdash;</span>
           {% endif %}
         </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
+{% endmacro %}
+
+<div class="card">
+  <h2>Open incidents <span class="muted" style="font-weight:normal">({{ open_rows|length }})</span></h2>
+  {% if not open_rows %}
+    <p>No incidents yet. <a href="/incidents/new">Create one</a> or send a test webhook (see README).</p>
+  {% else %}
+    {{ incident_table(open_rows) }}
   {% endif %}
 </div>
+
+{% if closed_rows %}
+<details class="card">
+  <summary style="cursor:pointer"><strong>Closed incidents</strong> <span class="muted">({{ closed_rows|length }})</span></summary>
+  <div style="margin-top:12px">{{ incident_table(closed_rows) }}</div>
+</details>
+{% endif %}
 {% endblock %}

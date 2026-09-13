@@ -4,14 +4,15 @@ No web or database dependencies live here on purpose: this package is the
 core differentiator (see build spec) and must stay fully unit-testable in
 isolation from FastAPI/SQLAlchemy.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 
-class Tri(str, Enum):
+class Tri(StrEnum):
     """Three-valued logic result for a single condition or rule."""
 
     TRUE = "true"
@@ -19,7 +20,7 @@ class Tri(str, Enum):
     UNKNOWN = "unknown"
 
 
-class Result(str, Enum):
+class Result(StrEnum):
     """The three outcomes the engine may report for a framework."""
 
     REPORTABLE = "reportable"
@@ -88,7 +89,7 @@ class Combinator:
     """`any`, `all`, or `not` composition of child logic nodes."""
 
     kind: str  # "any" | "all" | "not"
-    children: tuple["LogicNode", ...]
+    children: tuple[LogicNode, ...]
 
     def evaluate(self, facts: IncidentFacts) -> Tri:
         results = [c.evaluate(facts) for c in self.children]

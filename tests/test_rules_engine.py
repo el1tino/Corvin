@@ -89,7 +89,9 @@ def test_no_framework_applies():
 
 
 def test_ruleset_versions_are_loaded_and_explanations_are_plain_language():
-    evals = evaluate_all({"personal_data_involved": True, "breach_likely_risk_to_individuals": True}, RULESETS)
+    evals = evaluate_all(
+        {"personal_data_involved": True, "breach_likely_risk_to_individuals": True}, RULESETS
+    )
     gdpr_eval = evals["gdpr"]
     assert gdpr_eval.ruleset_version == 1
     assert any("[MET]" in e for e in gdpr_eval.explanations)

@@ -5,11 +5,12 @@ deterministic digest of its own fields plus the previous event's hash, so
 altering or removing any past event breaks every hash after it. This module
 only computes and checks digests; `service.py` wires it to the database.
 """
+
 from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 GENESIS_HASH = "0" * 64
@@ -32,8 +33,8 @@ def _canonical_timestamp(dt: datetime) -> str:
     timestamp this app writes), aware is converted to UTC.
     """
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc).isoformat()
+        dt = dt.replace(tzinfo=UTC)
+    return dt.astimezone(UTC).isoformat()
 
 
 def compute_event_hash(

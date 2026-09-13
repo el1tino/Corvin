@@ -9,6 +9,7 @@
   (i.e. of it actually being sent), not of awareness.
 - Final report: within one month of the *intermediate report* being sent.
 """
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -36,8 +37,9 @@ def compute_dora_clock(
             label="Initial notification",
             due_at=initial_due,
             basis=(
-                "24h-from-awareness cap (classification was too close to, or past, "
-                "the cap)" if capped else "4 hours from classification as major"
+                "24h-from-awareness cap (classification was too close to, or past, the cap)"
+                if capped
+                else "4 hours from classification as major"
             ),
         )
     ]

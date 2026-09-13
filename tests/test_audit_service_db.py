@@ -1,6 +1,5 @@
 from sqlalchemy import text
 
-from app.audit import verify_chain
 from app.audit.service import append_event, export_incident_trail, list_events_for_incident, verify_full_trail
 from app.models import Incident, IncidentSource
 
@@ -14,8 +13,12 @@ def _make_incident(db_session) -> Incident:
 
 def test_append_event_chains_correctly(db_session):
     incident = _make_incident(db_session)
-    e1 = append_event(db_session, event_type="incident.created", summary="Incident created", incident_id=incident.id)
-    e2 = append_event(db_session, event_type="incident.updated", summary="Facts edited", incident_id=incident.id)
+    e1 = append_event(
+        db_session, event_type="incident.created", summary="Incident created", incident_id=incident.id
+    )
+    e2 = append_event(
+        db_session, event_type="incident.updated", summary="Facts edited", incident_id=incident.id
+    )
     db_session.commit()
 
     assert e1.seq == 1
@@ -29,7 +32,9 @@ def test_append_event_chains_correctly(db_session):
 
 def test_export_incident_trail_shape(db_session):
     incident = _make_incident(db_session)
-    append_event(db_session, event_type="incident.created", summary="Incident created", incident_id=incident.id)
+    append_event(
+        db_session, event_type="incident.created", summary="Incident created", incident_id=incident.id
+    )
     db_session.commit()
 
     export = export_incident_trail(db_session, incident.id)
@@ -41,7 +46,9 @@ def test_export_incident_trail_shape(db_session):
 
 def test_tampering_with_a_stored_event_is_detected(db_session):
     incident = _make_incident(db_session)
-    append_event(db_session, event_type="incident.created", summary="Original summary", incident_id=incident.id)
+    append_event(
+        db_session, event_type="incident.created", summary="Original summary", incident_id=incident.id
+    )
     append_event(db_session, event_type="incident.updated", summary="Second event", incident_id=incident.id)
     db_session.commit()
 

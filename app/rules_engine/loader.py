@@ -5,6 +5,7 @@ as editable rules with a version number, not as hard-coded logic"). A
 customer or an operator can tune thresholds by editing these files and
 bumping `version` -- no Python change or redeploy of engine logic required.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

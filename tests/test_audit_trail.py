@@ -1,8 +1,8 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from app.audit import GENESIS_HASH, AuditEventRecord, compute_event_hash, verify_chain
 
-UTC = timezone.utc
+UTC = UTC
 
 
 def _build_chain(n: int) -> list[AuditEventRecord]:
@@ -50,9 +50,7 @@ def test_valid_chain_verifies_ok():
 def test_editing_a_past_event_breaks_verification():
     events = _build_chain(5)
     tampered = events[2]
-    events[2] = AuditEventRecord(
-        **{**tampered.__dict__, "summary": "Event 2 (edited by an attacker)"}
-    )
+    events[2] = AuditEventRecord(**{**tampered.__dict__, "summary": "Event 2 (edited by an attacker)"})
     result = verify_chain(events)
     assert not result.ok
     assert result.first_broken_seq == 2

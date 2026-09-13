@@ -8,6 +8,7 @@ unknown fields are preserved in `raw_payload` for provenance, and unmapped
 `facts` fields simply come back as "needs human input" from the engine
 rather than causing a failure.
 """
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -20,8 +21,12 @@ from .facts import IncidentFacts
 class WebhookIncidentIn(BaseModel):
     title: str
     description: str = ""
-    source_system: str = Field(description="Free-text name of the sending system, e.g. 'wazuh', 'sentinel', 'phishing-scanner'")
-    source_reference: str | None = Field(default=None, description="The sending system's own event/alert ID, for correlation")
+    source_system: str = Field(
+        description="Free-text name of the sending system, e.g. 'wazuh', 'sentinel', 'phishing-scanner'"
+    )
+    source_reference: str | None = Field(
+        default=None, description="The sending system's own event/alert ID, for correlation"
+    )
     detected_at: datetime | None = None
     awareness_at: datetime | None = Field(
         default=None,

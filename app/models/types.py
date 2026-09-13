@@ -11,9 +11,10 @@ every consumer -- app.clocks included, which deliberately rejects naive
 datetimes -- can always assume a timezone-aware, UTC datetime coming out
 of the database, on any backend.
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import DateTime
 from sqlalchemy.types import TypeDecorator
@@ -28,11 +29,11 @@ class UTCDateTime(TypeDecorator):
             return None
         if value.tzinfo is None:
             raise ValueError(f"Naive datetime {value!r} written to a UTCDateTime column")
-        return value.astimezone(timezone.utc)
+        return value.astimezone(UTC)
 
     def process_result_value(self, value: datetime | None, dialect) -> datetime | None:
         if value is None:
             return None
         if value.tzinfo is None:
-            return value.replace(tzinfo=timezone.utc)
-        return value.astimezone(timezone.utc)
+            return value.replace(tzinfo=UTC)
+        return value.astimezone(UTC)

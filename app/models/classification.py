@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import JSON, Boolean, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -8,6 +9,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from ..database import Base
 from .base import Timestamped, UUIDPk
 from .types import UTCDateTime
+
+if TYPE_CHECKING:
+    from .incident import Incident
+    from .user import User
 
 
 class ClassificationRun(Base, UUIDPk, Timestamped):
@@ -41,5 +46,5 @@ class ClassificationRun(Base, UUIDPk, Timestamped):
     confirmed_by_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     confirmed_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
 
-    incident: Mapped["Incident"] = relationship(back_populates="classification_runs")
-    confirmed_by: Mapped["User | None"] = relationship()
+    incident: Mapped[Incident] = relationship(back_populates="classification_runs")
+    confirmed_by: Mapped[User | None] = relationship()

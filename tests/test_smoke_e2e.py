@@ -5,6 +5,7 @@ generate + export a draft -> verify the audit trail.
 Uses a scratch SQLite file DB (not :memory:) so every request in the
 TestClient shares the same schema across the lifetime of the test.
 """
+
 import os
 import uuid
 
@@ -13,7 +14,6 @@ os.environ.setdefault("WEBHOOK_TOKEN", "test-webhook-token")
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import select
 
 
 @pytest.fixture()
@@ -28,9 +28,9 @@ def client(tmp_path, monkeypatch):
     get_engine.cache_clear()
     get_session_factory.cache_clear()
 
-    from app.database import Base
-    from app.models import User, Role
     from app.auth.security import hash_password
+    from app.database import Base
+    from app.models import Role, User
 
     Base.metadata.create_all(get_engine())
 

@@ -6,6 +6,7 @@ intake form and the webhook endpoint validate against this model before the
 data reaches the engine, so a typo'd field name fails loudly at intake
 rather than silently reading as "missing" forever.
 """
+
 from __future__ import annotations
 
 from pydantic import BaseModel, Field

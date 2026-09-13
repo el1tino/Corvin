@@ -7,6 +7,7 @@ The renderer understands a small, deliberate subset of Markdown -- `#`/`##`
 headings, `**bold**`, `*italic*`, and `- ` bullet lists -- enough for the
 templates in templates/*.md.j2, without pulling in a full Markdown engine.
 """
+
 from __future__ import annotations
 
 import io

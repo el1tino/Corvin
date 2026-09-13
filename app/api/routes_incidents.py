@@ -41,7 +41,9 @@ def create_incident_manual(
 
 
 @router.get("/{incident_id}")
-def get_incident(incident: Incident = Depends(get_incident_or_404), user: User = Depends(get_current_user)) -> dict:
+def get_incident(
+    incident: Incident = Depends(get_incident_or_404), user: User = Depends(get_current_user)
+) -> dict:
     return serialize_incident(incident)
 
 
@@ -86,4 +88,14 @@ def confirm_incident_classification(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    return serialize_incident(incident)
+
+
+@router.post("/{incident_id}/close")
+def close_incident(
+    incident: Incident = Depends(get_incident_or_404),
+    db: Session = Depends(get_db),
+    user: User = Depends(require_analyst),
+) -> dict:
+    incident_service.close_incident(db, incident, actor=user)
     return serialize_incident(incident)

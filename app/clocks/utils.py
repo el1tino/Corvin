@@ -8,14 +8,15 @@ duration math on local wall-clock time is the classic bug this avoids: on a
 spring-forward day, "add 4 hours" in naive local time would land 3 hours of
 real time later than intended.
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from dateutil.relativedelta import relativedelta
 
-UTC = timezone.utc
+UTC = UTC
 
 
 def ensure_utc(dt: datetime) -> datetime:

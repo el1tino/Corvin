@@ -16,18 +16,19 @@ Usage:
     CORVIN_URL=http://localhost:8000 CORVIN_WEBHOOK_TOKEN=change-me \\
         python scripts/phishing_scanner_webhook_client.py
 """
+
 from __future__ import annotations
 
 import os
 import sys
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import requests
 
 
 def build_payload(*, affected_mailboxes: int, records_exfiltrated: int) -> dict:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     return {
         "title": "Phishing-borne data exfiltration (customer CRM export)",
         "description": (
@@ -67,7 +68,9 @@ def send(payload: dict) -> requests.Response:
     base_url = os.environ.get("CORVIN_URL", "http://localhost:8000")
     token = os.environ.get("CORVIN_WEBHOOK_TOKEN")
     if not token:
-        print("Set CORVIN_WEBHOOK_TOKEN to the shared webhook secret configured on the server.", file=sys.stderr)
+        print(
+            "Set CORVIN_WEBHOOK_TOKEN to the shared webhook secret configured on the server.", file=sys.stderr
+        )
         sys.exit(1)
 
     return requests.post(

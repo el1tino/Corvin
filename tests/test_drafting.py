@@ -29,7 +29,11 @@ def _context(**facts_overrides):
             "awareness_at": "2026-01-10T08:00:00+00:00",
             "classification_confirmed_at": "2026-01-10T09:00:00+00:00",
         },
-        "classification": {"explanations": ["[MET] Impact spreads to two or more EU member states (dora.geographical_spread)"]},
+        "classification": {
+            "explanations": [
+                "[MET] Impact spreads to two or more EU member states (dora.geographical_spread)"
+            ]
+        },
         "deadline_due_at": "2026-01-10T13:00:00+00:00",
         "deadline_basis": "4 hours from classification as major",
         "data_subject_notification_required": False,
@@ -49,7 +53,7 @@ def test_deterministic_render_fills_known_facts_and_placeholders_unknowns():
 def test_generate_draft_without_llm_client_falls_back_to_deterministic():
     result = generate_draft(stage="dora_initial", context=_context(), llm_client=None)
     assert result.model_used == "deterministic-template"
-    assert "no LLM configured" in result.prompt_used
+    assert "No LLM configured" in result.llm_note
     assert len(result.placeholders) > 0
 
 
