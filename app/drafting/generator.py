@@ -49,7 +49,7 @@ in your output, in the same relative position. Never fill in a placeholder yours
 4. You may improve sentence structure, tone, and formatting for a professional \
 regulatory audience, and correct grammar.
 5. Do not add new sections. Do not remove any section, heading, or data field.
-6. Output only the revised document text -- no preamble, no commentary.
+6. Output only the revised document text, with no preamble and no commentary.
 """
 
 
@@ -130,7 +130,7 @@ def generate_draft(
         return fallback(f"LLM unavailable ({exc}); deterministic template only.")
 
     if extract_placeholders(polished) != placeholders:
-        # The model resolved, dropped, or altered a placeholder -- exactly
+        # The model resolved, dropped, or altered a placeholder, exactly
         # what the grounding rule forbids. Fail safe to the deterministic text.
         return fallback("LLM output rejected: placeholder set changed; deterministic template only.")
 

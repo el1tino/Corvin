@@ -72,7 +72,7 @@ class AnthropicLLMClient:
 
 def build_llm_client(settings: Settings) -> LLMClient | None:
     """Returns a ready client, or None when drafting should use the
-    deterministic renderer only (no key configured -- a fully supported
+    deterministic renderer only (no key configured, a fully supported
     mode, not a degraded one).
 
     Raises NonEuLlmBlocked if a key is configured but the provider region
@@ -95,7 +95,7 @@ def build_llm_client(settings: Settings) -> LLMClient | None:
     if non_eu:
         logger.warning(
             "Sending incident data to a non-EU LLM provider (%s) because ALLOW_NON_EU_LLM=true "
-            "is explicitly set -- an operator decision, not a default.",
+            "is explicitly set; an operator decision, not a default.",
             settings.llm_provider_region,
         )
 

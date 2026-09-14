@@ -43,7 +43,7 @@
     </tbody>
   </table>
   {% else %}
-  <p>No facts recorded yet &mdash; the engine will report every framework as "needs human input".</p>
+  <p>No facts recorded yet. The engine will report every framework as "needs human input".</p>
   {% endif %}
 
   <details>
@@ -101,7 +101,7 @@
 
   {% if latest_run %}
     {% if facts_changed_since_run %}
-      <p class="flash flash-error">Facts have changed since this run &mdash; re-run classification before confirming.</p>
+      <p class="flash flash-error">Facts have changed since this run. Re-run classification before confirming.</p>
     {% endif %}
     <div class="grid" style="margin-top:16px">
       {% for fw, result in latest_run.results.items() %}
@@ -162,7 +162,7 @@
   </table>
   {% if clock.data_subject_notification_required is defined and clock.data_subject_notification_required %}
   <p class="flash flash-error" style="margin-top:8px">Assessed as high risk to individuals: data subjects must be informed
-    without undue delay (Art. 34). No fixed statutory deadline &mdash; treat as an open action.</p>
+    without undue delay (Art. 34). No fixed statutory deadline; treat as an open action.</p>
   {% endif %}
   {% endfor %}
 </div>
@@ -172,7 +172,7 @@
 <div class="card">
   <h3>Draft notifications</h3>
   <p class="muted">Drafts are filled verbatim from the facts above; anything unknown is left as a visible
-    <code>[PLACEHOLDER]</code>. A human reviews, exports, submits &mdash; and records the submission so dependent clocks run from the real time.</p>
+    <code>[PLACEHOLDER]</code>. A human reviews, exports and submits, then records the submission so dependent clocks run from the real time.</p>
   {% for fw, stages in available_stages.items() %}
   <h4>{{ fw.upper() }}</h4>
   <div class="btn-row" style="margin-bottom:16px">
@@ -226,11 +226,11 @@
 <div class="card">
   <h3>Audit trail</h3>
   <p><a href="/api/incidents/{{ incident.id }}/audit/export">Download machine-verifiable JSON export</a>
-    <span class="muted">&mdash; every event below is hash-chained to the one before it.</span></p>
+    <span class="muted">(every event below is hash-chained to the one before it)</span></p>
   <ul class="timeline">
     {% for e in events %}
     <li><span class="ts">{{ e.created_at|localtime(tz, '%Y-%m-%d %H:%M:%S') }}</span>
-      <strong>{{ e.actor_label }}</strong> &mdash; {{ e.summary.removeprefix(e.actor_label ~ ' ') }}
+      <strong>{{ e.actor_label }}</strong>: {{ e.summary.removeprefix(e.actor_label ~ ' ') }}
       <span class="hash" title="{{ e.hash }}">{{ e.hash[:12] }}</span></li>
     {% endfor %}
   </ul>

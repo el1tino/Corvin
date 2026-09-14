@@ -7,7 +7,9 @@ from sqlalchemy import engine_from_config, pool
 
 from app.config import get_settings
 from app.database import Base
-from app.models import (  # noqa: F401 -- import registers every model on Base's metadata
+
+# Importing the models registers every table on Base's metadata for autogenerate.
+from app.models import (  # noqa: F401
     AuditEvent,
     ClassificationRun,
     CustomerConfig,

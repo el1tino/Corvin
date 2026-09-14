@@ -24,7 +24,7 @@ def canonical_json(data: dict[str, Any]) -> str:
 def _canonical_timestamp(dt: datetime) -> str:
     """Canonicalize to a UTC ISO-8601 string before hashing.
 
-    Some storage backends (SQLite, notably -- used in tests; production
+    Some storage backends (notably SQLite, used in tests; production
     runs Postgres) don't round-trip a timezone-aware datetime's tzinfo, so
     a value read back from the database can come back naive even though it
     was written as UTC. Rather than let the hash depend on a Python

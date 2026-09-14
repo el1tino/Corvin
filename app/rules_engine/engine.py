@@ -4,7 +4,7 @@ Deliberately tiny: all the domain knowledge lives in the YAML rulesets
 (app/rules_engine/rules/*.yaml), loaded via `loader.py`. This module only
 knows how to combine already-evaluated tri-state rule outcomes into one of
 the three verdicts the build spec requires: reportable, not_reportable, or
-needs_human_input -- always alongside which rules fired and which fields
+needs_human_input, always alongside which rules fired and which fields
 are still missing, in plain language.
 """
 
@@ -35,7 +35,7 @@ def evaluate_framework(facts: IncidentFacts, ruleset: RuleSet) -> FrameworkEvalu
             rule_missing = rule.missing_fields(facts)
             missing |= rule_missing
             explanations.append(
-                f"[UNKNOWN] {rule.description} ({rule.id}) -- missing: "
+                f"[UNKNOWN] {rule.description} ({rule.id}); missing: "
                 f"{', '.join(sorted(rule_missing)) or 'n/a'}"
             )
 

@@ -3,7 +3,7 @@
 Rules are data, not code, on purpose (see build spec: "Store the criteria
 as editable rules with a version number, not as hard-coded logic"). A
 customer or an operator can tune thresholds by editing these files and
-bumping `version` -- no Python change or redeploy of engine logic required.
+bumping `version`; no Python change or redeploy of engine logic required.
 """
 
 from __future__ import annotations
@@ -59,7 +59,7 @@ def load_all_rulesets(directory: str | Path = RULES_DIR) -> dict[str, RuleSet]:
     """Load every *.yaml file in `directory`, keyed by framework name.
 
     If a framework has more than one version file (e.g. dora_v1.yaml and a
-    future dora_v2.yaml), the highest `version` wins -- this is how a
+    future dora_v2.yaml), the highest `version` wins. This is how a
     customer-tuned ruleset supersedes the shipped default without deleting
     the audit history of what the old rules said.
     """

@@ -24,7 +24,7 @@ def receive_incident(payload: WebhookIncidentIn, db: Session = Depends(get_db)) 
     Any SIEM, EDR, or custom scanner (see the phishing-scanner integration
     in scripts/) can POST here with a shared token in the `X-Webhook-Token`
     header. Only `title` and `source_system` are required; every other
-    field -- including every entry in `facts` -- is optional, and a field
+    field, including every entry in `facts`, is optional, and a field
     the classification engine needs but doesn't get simply comes back as
     "needs human input" rather than rejecting the incident.
     """

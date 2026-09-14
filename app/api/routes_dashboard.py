@@ -34,7 +34,7 @@ templates = Jinja2Templates(directory="app/templates")
 def _localtime(dt: datetime | None, tz_name: str, fmt: str = "%Y-%m-%d %H:%M %Z") -> str:
     """Timestamps are stored in UTC and displayed in the customer's configured timezone."""
     if dt is None:
-        return "—"
+        return "not recorded"
     return to_local(dt, tz_name).strftime(fmt)
 
 
@@ -239,7 +239,7 @@ async def incident_facts_submit(
         awareness_at=_parse_form_datetime(form.get("awareness_at")),
         actor=user,
     )
-    return _redirect(f"/incidents/{incident.id}", msg="Facts updated -- re-run classification")
+    return _redirect(f"/incidents/{incident.id}", msg="Facts updated. Re-run classification")
 
 
 @router.post("/incidents/{incident_id}/classify")
@@ -250,7 +250,7 @@ def incident_classify_submit(
     if isinstance(incident, RedirectResponse):
         return incident
     incident_service.run_classification(db, incident, user)
-    return _redirect(f"/incidents/{incident.id}", msg="Classification engine run -- review and confirm below")
+    return _redirect(f"/incidents/{incident.id}", msg="Classification engine run. Review and confirm below")
 
 
 @router.post("/incidents/{incident_id}/confirm")
@@ -350,7 +350,7 @@ def incident_mark_draft_submitted(
     except draft_service.DraftNotAllowedError as exc:
         return _redirect(f"/incidents/{incident_id}", err=str(exc))
     return _redirect(
-        f"/incidents/{incident_id}", msg="Recorded as submitted -- dependent clocks now run from this time"
+        f"/incidents/{incident_id}", msg="Recorded as submitted. Dependent clocks now run from this time"
     )
 
 

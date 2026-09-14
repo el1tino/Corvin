@@ -23,7 +23,7 @@ class IncidentFacts(BaseModel):
     # availability/authenticity of data *supporting a critical or important
     # function*. A personal-data-only exposure that doesn't touch such a
     # function (e.g. a static document store) should leave these false even
-    # if `personal_data_involved` is true -- the two are not the same fact.
+    # if `personal_data_involved` is true; the two are not the same fact.
     data_loss_confidentiality: bool | None = None
     data_loss_integrity: bool | None = None
     data_loss_availability: bool | None = None

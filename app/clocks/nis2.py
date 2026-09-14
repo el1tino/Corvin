@@ -1,6 +1,6 @@
 """NIS2 (Directive 2022/2555) notification clocks.
 
-All three deadlines run from the awareness timestamp -- unlike DORA, there
+All three deadlines run from the awareness timestamp; unlike DORA, there
 is no separate "classification" moment that starts the clock.
 """
 

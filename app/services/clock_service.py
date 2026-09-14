@@ -1,6 +1,6 @@
 """Bridges a confirmed ClassificationRun to the pure app.clocks functions.
 
-Deadlines are only computed -- and only shown as authoritative -- for a
+Deadlines are only computed, and only shown as authoritative, for a
 framework whose *confirmed* classification result is "reportable". An
 unconfirmed engine recommendation must never start a statutory clock.
 

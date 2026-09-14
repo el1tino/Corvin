@@ -17,7 +17,7 @@ class LoginRequired(Exception):
     """Raised by dashboard routes when no valid session cookie is present.
 
     Handled app-wide (see app.main) by redirecting to the login page, so
-    HTML routes get a redirect while JSON routes keep their 401 -- one auth
+    HTML routes get a redirect while JSON routes keep their 401: one auth
     implementation, two presentations.
     """
 

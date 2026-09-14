@@ -3,7 +3,7 @@
 The Article 33 supervisory-authority deadline runs from awareness. Article
 34's data-subject notification has no fixed statutory deadline ("without
 undue delay"), so it is surfaced as a required action rather than a hard
-due date -- gating it on a fake deadline would misrepresent the law.
+due date; gating it on a fake deadline would misrepresent the law.
 """
 
 from __future__ import annotations

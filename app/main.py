@@ -31,9 +31,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
             "Set them in the environment (see .env.example)."
         )
     if insecure:
-        logger.warning(
-            "Running with placeholder secrets (%s) -- fine for a demo, not for real use.", insecure
-        )
+        logger.warning("Running with placeholder secrets (%s). Fine for a demo, not for real use.", insecure)
     yield
 
 

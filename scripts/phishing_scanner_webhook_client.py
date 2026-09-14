@@ -5,7 +5,7 @@ This is the reference implementation for the build spec's demo scenario:
 pre-populated incident with personal-data-involved already set, so the
 GDPR path lights up automatically."
 
-It is deliberately a plain `requests` script, not a Corvin module -- it
+It is deliberately a plain `requests` script, not a Corvin module; it
 models what a *separate* system (the builder's existing Python client-server
 email/threat scanner, or any other SIEM/EDR) would run when it confirms a
 phishing incident involving data exfiltration. Point CORVIN_URL at a
@@ -39,12 +39,12 @@ def build_payload(*, affected_mailboxes: int, records_exfiltrated: int) -> dict:
         "source_system": "phishing-scanner",
         "source_reference": str(uuid.uuid4()),
         # In a real integration these come from the scanner's own detection
-        # and triage timestamps -- they are usually different moments.
+        # and triage timestamps; they are usually different moments.
         "detected_at": now.isoformat(),
         "awareness_at": now.isoformat(),
         "facts": {
             # The scanner already knows this was a data-exfiltration event,
-            # so it pre-populates the GDPR-relevant facts -- the whole point
+            # so it pre-populates the GDPR-relevant facts, which is the whole point
             # of a direct SOC-to-reporting integration versus a human
             # re-typing the incident into a GRC register later.
             "personal_data_involved": True,

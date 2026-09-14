@@ -2,7 +2,7 @@
 customer configuration for a Dutch fintech, so a fresh `docker compose up`
 has something to log into immediately.
 
-Safe to run repeatedly (e.g. on every container start) -- it only inserts
+Safe to run repeatedly (e.g. on every container start); it only inserts
 rows that don't already exist.
 
 Usage: python -m scripts.demo_seed

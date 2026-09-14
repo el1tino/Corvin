@@ -33,7 +33,7 @@ def append_event(
 ) -> AuditEvent:
     payload = payload or {}
     # Lock the current tail row so two concurrent appends can't both read the
-    # same prev_hash and race to insert -- the chain must stay strictly
+    # same prev_hash and race to insert; the chain must stay strictly
     # linear even under concurrent requests.
     last = db.execute(
         select(AuditEvent).order_by(AuditEvent.seq.desc()).limit(1).with_for_update()
@@ -98,7 +98,7 @@ def list_all_events(db: Session) -> list[AuditEvent]:
 
 
 def verify_full_trail(db: Session) -> VerificationResult:
-    """Verify the *entire* chain -- an incident-scoped subsequence can look
+    """Verify the *entire* chain. An incident-scoped subsequence can look
     internally consistent even if a different incident's event was tampered
     with, since the chain links across incidents by design (one global,
     strictly ordered ledger).

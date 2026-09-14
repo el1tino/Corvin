@@ -1,7 +1,7 @@
 """Timestamp arithmetic shared by all framework clocks.
 
 All deadline math happens in UTC. UTC has no daylight-saving transitions, so
-"4 hours from now" is always exactly 4 hours of elapsed time -- the DST edge
+"4 hours from now" is always exactly 4 hours of elapsed time. The DST edge
 case the build spec calls out is a *display* concern (converting a UTC
 instant to the customer's local timezone), never an arithmetic one. Doing
 duration math on local wall-clock time is the classic bug this avoids: on a

@@ -10,7 +10,7 @@ from .base import Timestamped, UUIDPk
 class AuditEvent(Base, UUIDPk, Timestamped):
     """One append-only, hash-chained entry in the tamper-evident audit trail.
 
-    Rows here must never be updated or deleted -- see
+    Rows here must never be updated or deleted; see
     migrations/versions for the Postgres rules that enforce this at the
     database level, not just by application convention. Use
     app.audit.service to append events; do not construct/insert this model
@@ -20,7 +20,7 @@ class AuditEvent(Base, UUIDPk, Timestamped):
     __tablename__ = "audit_events"
 
     # Assigned in Python by app.audit.service.append_event, under a row lock
-    # on the chain's tail -- deliberately not a DB-native autoincrement/
+    # on the chain's tail. Deliberately not a DB-native autoincrement/
     # sequence, so the same code path works identically on Postgres in
     # production and SQLite in tests.
     seq: Mapped[int] = mapped_column(Integer, unique=True, nullable=False)

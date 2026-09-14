@@ -146,7 +146,7 @@ def run_classification(db: Session, incident: Incident, actor: User) -> Classifi
 
 class StaleClassificationError(Exception):
     """Raised when confirming a run whose facts snapshot no longer matches
-    the incident's current facts -- the facts were edited after this run,
+    the incident's current facts. The facts were edited after this run,
     so it must be re-run before it can be treated as authoritative."""
 
 

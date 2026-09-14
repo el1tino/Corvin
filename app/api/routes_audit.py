@@ -32,7 +32,7 @@ def download_audit_trail(
 ) -> Response:
     """A single machine-verifiable JSON file for this incident's full audit
     trail (build spec: export as human-readable timeline plus a
-    machine-verifiable file -- this endpoint serves both in one document,
+    machine-verifiable file. This endpoint serves both in one document,
     since the timeline is itself derived from the verifiable event list).
     """
     export = export_incident_trail(db, incident.id)

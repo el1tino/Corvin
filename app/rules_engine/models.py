@@ -39,7 +39,7 @@ class Condition:
     """A single leaf condition: `field <op> value`.
 
     A field that is absent from the facts dict (or explicitly None)
-    evaluates to Tri.UNKNOWN rather than False -- an unanswered question,
+    evaluates to Tri.UNKNOWN rather than False: an unanswered question,
     not a negative answer.
     """
 
@@ -72,7 +72,7 @@ class Condition:
         except TypeError:
             # Comparing incompatible types (e.g. None slipped through, or a
             # string vs a number) is treated as "can't tell" rather than a
-            # crash -- the engine must degrade to needs_human_input, never 500.
+            # crash; the engine must degrade to needs_human_input, never 500.
             return Tri.UNKNOWN
 
     def missing_fields(self, facts: IncidentFacts) -> set[str]:
@@ -150,7 +150,7 @@ class RuleSet:
     framework: str
     version: int
     title: str
-    combinator: str  # "any" | "all" -- how rule outcomes combine to a verdict
+    combinator: str  # "any" | "all": how rule outcomes combine to a verdict
     rules: tuple[Rule, ...]
     disclaimer: str = ""
     reportable_label: str = ""

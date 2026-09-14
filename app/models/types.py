@@ -2,13 +2,13 @@
 
 `UTCDateTime` exists because SQLite (used in tests; production runs
 Postgres per the build spec) does not round-trip a timezone-aware
-datetime's tzinfo -- a value written as UTC-aware can come back naive on
+datetime's tzinfo: a value written as UTC-aware can come back naive on
 read. Postgres via psycopg does not have this problem, but relying on
 that per-backend difference would mean the app behaves correctly only in
 production and silently breaks in tests (or on SQLite ever used again in
 some other tool/migration). Normalizing at the type-decorator layer means
-every consumer -- app.clocks included, which deliberately rejects naive
-datetimes -- can always assume a timezone-aware, UTC datetime coming out
+every consumer (app.clocks included, which deliberately rejects naive
+datetimes) can always assume a timezone-aware, UTC datetime coming out
 of the database, on any backend.
 """
 

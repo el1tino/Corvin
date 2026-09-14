@@ -3,7 +3,7 @@ fixtures (tests/fixtures/*.json), one per build-spec-required scenario:
 DORA-only, GDPR-only, NIS2-only, all three, none, and needs-human-input.
 
 Kept separate from test_rules_engine.py (which exercises the engine's
-mechanics with minimal synthetic facts) -- these fixtures are meant to read
+mechanics with minimal synthetic facts); these fixtures are meant to read
 as incidents a real SOC analyst would recognize, and to double as sample
 payloads for manual testing of the webhook/manual-intake path.
 """

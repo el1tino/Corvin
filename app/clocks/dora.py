@@ -2,7 +2,7 @@
 
 - Initial notification: within 4 hours of classifying the incident as
   major, and no later than 24 hours from becoming aware of it. The 24-hour
-  mark is a hard cap, not a target -- if classification happens more than
+  mark is a hard cap, not a target: if classification happens more than
   20 hours after awareness, the 4-hour allowance would blow through the
   cap, so the cap wins.
 - Intermediate report: within 72 hours of the *initial notification*
@@ -50,7 +50,7 @@ def compute_dora_clock(
         intermediate_provisional = False
     else:
         intermediate_basis_at = initial_due
-        intermediate_basis = "72 hours from the initial notification's due date (provisional -- not yet sent)"
+        intermediate_basis = "72 hours from the initial notification's due date (provisional, not yet sent)"
         intermediate_provisional = True
     intermediate_due = add_hours(intermediate_basis_at, 72)
     deadlines.append(
@@ -68,7 +68,7 @@ def compute_dora_clock(
         final_provisional = False
     else:
         final_basis_at = intermediate_due
-        final_basis = "one month from the intermediate report's due date (provisional -- not yet sent)"
+        final_basis = "one month from the intermediate report's due date (provisional, not yet sent)"
         final_provisional = True
     final_due = add_calendar_month(final_basis_at)
     deadlines.append(

@@ -3,8 +3,8 @@ submission by a human (build spec: "Drafts are exported as DOCX or PDF for
 manual submission"; actual submission to an authority portal is explicitly
 out of scope).
 
-The renderer understands a small, deliberate subset of Markdown -- `#`/`##`
-headings, `**bold**`, `*italic*`, and `- ` bullet lists -- enough for the
+The renderer understands a small, deliberate subset of Markdown: `#`/`##`
+headings, `**bold**`, `*italic*`, and `- ` bullet lists, enough for the
 templates in templates/*.md.j2, without pulling in a full Markdown engine.
 """
 

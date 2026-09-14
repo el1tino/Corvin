@@ -29,7 +29,7 @@ class ClassificationRun(Base, UUIDPk, Timestamped):
 
     incident_id: Mapped[str] = mapped_column(ForeignKey("incidents.id"), nullable=False, index=True)
 
-    # {"dora": 1, "nis2": 1, "gdpr": 1} -- which editable ruleset version
+    # {"dora": 1, "nis2": 1, "gdpr": 1}: which editable ruleset version
     # produced this run's results, per framework.
     ruleset_versions: Mapped[dict] = mapped_column(JSON, nullable=False)
 

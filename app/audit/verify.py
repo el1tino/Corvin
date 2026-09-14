@@ -18,7 +18,7 @@ def verify_chain(events: list[AuditEventRecord]) -> VerificationResult:
     """Recompute every hash in sequence and confirm it matches what's stored.
 
     Any edit, deletion, reordering, or insertion in the middle of the chain
-    changes a `prev_hash` or a `hash` and is caught here -- this is the
+    changes a `prev_hash` or a `hash` and is caught here. This is the
     "machine-verifiable" half of the audit export the build spec asks for.
     """
     expected_prev = GENESIS_HASH
@@ -30,7 +30,7 @@ def verify_chain(events: list[AuditEventRecord]) -> VerificationResult:
                 first_broken_seq=event.seq,
                 detail=(
                     f"Event seq={event.seq} records prev_hash={event.prev_hash!r} but the "
-                    f"preceding event's hash was {expected_prev!r} -- chain is broken or reordered."
+                    f"preceding event's hash was {expected_prev!r}; chain is broken or reordered."
                 ),
             )
         recomputed = compute_event_hash(
@@ -49,7 +49,7 @@ def verify_chain(events: list[AuditEventRecord]) -> VerificationResult:
                 first_broken_seq=event.seq,
                 detail=(
                     f"Event seq={event.seq} stored hash={event.hash!r} does not match "
-                    f"recomputed hash={recomputed!r} -- its contents were altered after logging."
+                    f"recomputed hash={recomputed!r}; its contents were altered after logging."
                 ),
             )
         expected_prev = event.hash

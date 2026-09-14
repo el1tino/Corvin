@@ -23,7 +23,7 @@ def test_dora_normal_case_four_hours_from_classification():
 
 
 def test_dora_24_hour_cap_kicks_in_when_classification_is_late():
-    # Classification happens 21 hours after awareness -- more than the spec's
+    # Classification happens 21 hours after awareness, more than the spec's
     # "more than 20 hours" trigger point for the cap.
     awareness = datetime(2026, 1, 10, 8, 0, tzinfo=UTC)
     classification = awareness + timedelta(hours=21)
@@ -123,7 +123,7 @@ def test_dst_spring_forward_local_display_does_not_corrupt_utc_duration():
     local_awareness = to_local(awareness, "Europe/Brussels")
     local_due = to_local(due, "Europe/Brussels")
     # Local wall-clock offsets differ (CET vs CEST) even though the
-    # underlying UTC gap is fixed -- proof the app must never do the +72h
+    # underlying UTC gap is fixed, proof the app must never do the +72h
     # arithmetic in local time.
     assert local_awareness.utcoffset() != local_due.utcoffset()
     assert local_awareness.tzinfo is not None and isinstance(
