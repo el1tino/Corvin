@@ -1,239 +1,109 @@
-"""End-to-end smoke test driving the FastAPI app the same way the demo
-walkthrough does: webhook intake -> classify -> confirm -> clocks ->
-generate + export a draft -> verify the audit trail.
+"""The build spec's definition-of-done walkthrough, driven through the JSON
+API exactly as the demo does: webhook -> classify -> confirm -> clocks ->
+drafts -> edit -> export -> audit trail verifies."""
 
-Uses a scratch SQLite file DB (not :memory:) so every request in the
-TestClient shares the same schema across the lifetime of the test.
-"""
-
-import os
-import uuid
-
-os.environ.setdefault("JWT_SECRET_KEY", "test-secret")
-os.environ.setdefault("WEBHOOK_TOKEN", "test-webhook-token")
-
-import pytest
-from fastapi.testclient import TestClient
+from conftest import bearer, post_webhook
 
 
-@pytest.fixture()
-def client(tmp_path, monkeypatch):
-    db_path = tmp_path / "smoke.db"
-    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{db_path}")
+def test_full_demo_walkthrough(app_client):
+    admin = bearer(app_client, "admin")
+    compliance = bearer(app_client, "compliance")
 
-    from app.config import get_settings
-    from app.database import get_engine, get_session_factory
-
-    get_settings.cache_clear()
-    get_engine.cache_clear()
-    get_session_factory.cache_clear()
-
-    from app.auth.security import hash_password
-    from app.database import Base
-    from app.models import Role, User
-
-    Base.metadata.create_all(get_engine())
-
-    session = get_session_factory()()
-    admin = User(
-        email="admin@example.com",
-        full_name="Ada Admin",
-        hashed_password=hash_password("password123"),
-        role=Role.ADMIN,
-    )
-    compliance = User(
-        email="compliance@example.com",
-        full_name="Cara Compliance",
-        hashed_password=hash_password("password123"),
-        role=Role.COMPLIANCE,
-    )
-    session.add_all([admin, compliance])
-    session.commit()
-    session.close()
-
-    from app.main import app
-
-    with TestClient(app) as c:
-        yield c
-
-    get_settings.cache_clear()
-    get_engine.cache_clear()
-    get_session_factory.cache_clear()
-
-
-def _login(client, email, password="password123"):
-    resp = client.post("/auth/token", data={"username": email, "password": password})
-    assert resp.status_code == 200, resp.text
-    return resp.json()["access_token"]
-
-
-def test_full_demo_walkthrough(client):
-    admin_token = _login(client, "admin@example.com")
-    compliance_token = _login(client, "compliance@example.com")
-
-    # Admin configures the customer's authorities up front.
-    config_resp = client.put(
+    resp = app_client.put(
         "/api/config",
-        headers={"Authorization": f"Bearer {admin_token}"},
+        headers=admin,
         json={
             "entity_name": "Acme Fintech BV",
             "member_state": "NL",
             "dora_authority_name": "De Nederlandsche Bank",
-            "dora_authority_contact": "dora@dnb.nl",
             "gdpr_supervisory_authority_name": "Autoriteit Persoonsgegevens",
-            "gdpr_supervisory_authority_contact": "meldloket@autoriteitpersoonsgegevens.nl",
         },
-    )
-    assert config_resp.status_code == 200, config_resp.text
-
-    # 1. Webhook fires from the phishing scanner: a confirmed phishing-borne
-    # data exfiltration, pre-populated with personal-data-involved set.
-    webhook_payload = {
-        "title": "Phishing-borne exfiltration of customer records",
-        "description": "A staff member's mailbox was compromised via a phishing link; attacker exfiltrated a CRM export.",
-        "source_system": "phishing-scanner",
-        "source_reference": str(uuid.uuid4()),
-        "detected_at": "2026-03-10T08:00:00Z",
-        "awareness_at": "2026-03-10T08:15:00Z",
-        "facts": {
-            "affected_clients_pct": 12,
-            "critical_services_affected": True,
-            "downtime_minutes": 45,
-            "member_states_affected_count": 1,
-            "data_loss_confidentiality": True,
-            "economic_impact_amount_eur": 150000,
-            "personal_data_involved": True,
-            "breach_likely_risk_to_individuals": True,
-            "breach_likely_high_risk_to_individuals": True,
-            "data_subjects_affected_count": 4300,
-            "severe_operational_disruption": False,
-            "significant_financial_loss": False,
-            "affects_other_persons_considerable_damage": False,
-        },
-    }
-    resp = client.post(
-        "/webhook/incidents", json=webhook_payload, headers={"X-Webhook-Token": "test-webhook-token"}
-    )
-    assert resp.status_code == 201, resp.text
-    incident = resp.json()
-    incident_id = incident["id"]
-
-    # 2. Incident appears on the dashboard.
-    resp = client.get("/api/incidents", headers={"Authorization": f"Bearer {compliance_token}"})
-    assert resp.status_code == 200
-    assert any(i["id"] == incident_id for i in resp.json())
-
-    # 3. Engine flags DORA + GDPR as reportable, NIS2 not reportable.
-    resp = client.post(
-        f"/api/incidents/{incident_id}/classify", headers={"Authorization": f"Bearer {compliance_token}"}
     )
     assert resp.status_code == 200, resp.text
-    data = resp.json()
-    run = data["latest_classification"]
+    assert app_client.get("/api/config", headers=compliance).json()["entity_name"] == "Acme Fintech BV"
+
+    # 1. The phishing scanner fires the webhook.
+    incident_id = post_webhook(app_client)["id"]
+
+    # 2. It appears on the dashboard list.
+    assert any(i["id"] == incident_id for i in app_client.get("/api/incidents", headers=compliance).json())
+
+    # 3. Engine: DORA + GDPR reportable, NIS2 not.
+    run = app_client.post(f"/api/incidents/{incident_id}/classify", headers=compliance).json()[
+        "latest_classification"
+    ]
     assert run["results"]["dora"]["result"] == "reportable"
     assert run["results"]["gdpr"]["result"] == "reportable"
     assert run["results"]["nis2"]["result"] == "not_reportable"
-    assert any("dora.data_losses" in r for r in run["results"]["dora"]["fired_rules"])
-    run_id = run["id"]
+    assert "dora.data_losses" in run["results"]["dora"]["fired_rules"]
 
-    # 4. The analyst confirms the classification.
-    resp = client.post(
+    # 4. Named sign-off.
+    resp = app_client.post(
         f"/api/incidents/{incident_id}/classify/confirm",
-        json={"classification_run_id": run_id},
-        headers={"Authorization": f"Bearer {compliance_token}"},
+        json={"classification_run_id": run["id"]},
+        headers=compliance,
     )
     assert resp.status_code == 200, resp.text
     data = resp.json()
     assert data["confirmed_classification"]["is_confirmed"] is True
+    assert data["confirmed_by"] == "Cara Compliance (compliance)"
 
-    # 5. Three countdown clocks appear (DORA has 3 deadlines, GDPR has 1).
+    # 5. Clocks: DORA has three milestones, GDPR one, NIS2 none.
     clocks = data["clocks"]["frameworks"]
-    assert "dora" in clocks and len(clocks["dora"]["deadlines"]) == 3
-    assert "gdpr" in clocks and len(clocks["gdpr"]["deadlines"]) == 1
-    assert "nis2" not in clocks  # not reportable -> no clock shown
-    assert data["clocks"]["nearest_deadline"] is not None
+    assert len(clocks["dora"]["deadlines"]) == 3
+    assert len(clocks["gdpr"]["deadlines"]) == 1
+    assert clocks["gdpr"]["data_subject_notification_required"] is True
+    assert "nis2" not in clocks
+    assert data["clocks"]["nearest_deadline"]["label"] == "Initial notification"
 
-    # 6. Compliance lead generates the DORA initial notification and the
-    # GDPR notification as drafts.
-    resp = client.post(
+    # 6. Drafts for the two reportable frameworks; refused for the third.
+    dora_draft = app_client.post(
         f"/api/incidents/{incident_id}/drafts",
         json={"framework": "dora", "stage": "dora_initial"},
-        headers={"Authorization": f"Bearer {compliance_token}"},
-    )
-    assert resp.status_code == 201, resp.text
-    dora_draft = resp.json()
+        headers=compliance,
+    ).json()
     assert "Acme Fintech BV" in dora_draft["content"]
-    assert len(dora_draft["placeholders"]) > 0
-
-    resp = client.post(
+    assert dora_draft["model_used"] == "deterministic-template"
+    assert dora_draft["placeholders"]
+    gdpr_draft = app_client.post(
         f"/api/incidents/{incident_id}/drafts",
         json={"framework": "gdpr", "stage": "gdpr_article_33"},
-        headers={"Authorization": f"Bearer {compliance_token}"},
-    )
-    assert resp.status_code == 201, resp.text
-    gdpr_draft = resp.json()
-
-    # A draft for a not-reportable framework must be refused.
-    resp = client.post(
+        headers=compliance,
+    ).json()
+    assert "high risk to the rights and freedoms" in gdpr_draft["content"]
+    resp = app_client.post(
         f"/api/incidents/{incident_id}/drafts",
         json={"framework": "nis2", "stage": "nis2_early_warning"},
-        headers={"Authorization": f"Bearer {compliance_token}"},
+        headers=compliance,
     )
     assert resp.status_code == 409
 
-    # 7. Edit one placeholder on the DORA draft.
-    edited_content = dora_draft["content"].replace(
-        "[PLACEHOLDER: entity legal name]", "Acme Fintech BV (edited)", 1
-    )
-    resp = client.patch(
+    # 7. Edit one placeholder.
+    edited = dora_draft["content"].replace(dora_draft["placeholders"][0], "resolved by hand", 1)
+    resp = app_client.patch(
         f"/api/incidents/{incident_id}/drafts/{dora_draft['id']}",
-        json={"content": edited_content},
-        headers={"Authorization": f"Bearer {compliance_token}"},
+        json={"content": edited},
+        headers=compliance,
     )
-    assert resp.status_code == 200, resp.text
+    assert resp.status_code == 200
+    assert len(resp.json()["placeholders"]) == len(dora_draft["placeholders"]) - 1
 
     # 8. Export both as PDF.
-    resp = client.post(
-        f"/api/incidents/{incident_id}/drafts/{dora_draft['id']}/export?fmt=pdf",
-        headers={"Authorization": f"Bearer {compliance_token}"},
-    )
-    assert resp.status_code == 200
-    assert resp.content[:5] == b"%PDF-"
+    for draft in (dora_draft, gdpr_draft):
+        resp = app_client.post(
+            f"/api/incidents/{incident_id}/drafts/{draft['id']}/export?fmt=pdf", headers=compliance
+        )
+        assert resp.status_code == 200
+        assert resp.content[:5] == b"%PDF-"
+        assert resp.headers["content-disposition"].endswith('.pdf"')
 
-    resp = client.post(
-        f"/api/incidents/{incident_id}/drafts/{gdpr_draft['id']}/export?fmt=pdf",
-        headers={"Authorization": f"Bearer {compliance_token}"},
-    )
-    assert resp.status_code == 200
-    assert resp.content[:5] == b"%PDF-"
-
-    # 9. The audit trail shows every step with timestamps and the
-    # responsible user, and verifies as tamper-free.
-    resp = client.get(
-        f"/api/incidents/{incident_id}/audit", headers={"Authorization": f"Bearer {compliance_token}"}
-    )
-    assert resp.status_code == 200
-    audit = resp.json()
+    # 9. Audit trail: every step, attributed, chain intact.
+    audit = app_client.get(f"/api/incidents/{incident_id}/audit", headers=compliance).json()
     assert audit["chain_integrity"]["ok"] is True
-    event_types = [e["event_type"] for e in audit["timeline"]]
-    assert "incident.created" in event_types
-    assert "classification.run" in event_types
-    assert "classification.confirmed" in event_types
-    assert event_types.count("draft.generated") == 2
-    assert event_types.count("draft.exported") == 2
-    assert "draft.edited" in event_types
-
-
-def test_webhook_requires_correct_token(client):
-    resp = client.post(
-        "/webhook/incidents",
-        json={"title": "x", "source_system": "test"},
-        headers={"X-Webhook-Token": "wrong-token"},
-    )
-    assert resp.status_code == 401
-
-
-def test_dashboard_requires_login_and_redirects(client):
-    resp = client.get("/dashboard", follow_redirects=False)
-    assert resp.status_code in (302, 303)
-    assert resp.headers["location"] == "/login"
+    types = [e["event_type"] for e in audit["timeline"]]
+    assert types[0] == "incident.created"
+    assert audit["timeline"][0]["actor"] == "webhook:phishing-scanner"
+    assert types.count("draft.generated") == 2
+    assert types.count("draft.exported") == 2
+    assert "classification.confirmed" in types and "draft.edited" in types
+    assert all(e["actor"] == "Cara Compliance (compliance)" for e in audit["timeline"][1:])

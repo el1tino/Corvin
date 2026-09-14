@@ -82,7 +82,7 @@ app/
   drafting/       templates, deterministic renderer, EU-gated LLM client, exporters
   services/       orchestration: the only layer that mutates state or writes audit events
   api/            JSON routes + the HTML dashboard (both call the same services)
-  models/         SQLAlchemy ORM · migrations/  Alembic · tests/  54 tests, 6 realistic fixtures
+  models/         SQLAlchemy ORM · migrations/  Alembic · tests/  93 tests, 6 realistic fixtures
 ```
 
 The two packages that carry the domain logic, `rules_engine` and `clocks`,
@@ -194,18 +194,25 @@ the endpoint is token-authenticated and rate-limited. The OpenAPI spec is at
 
 ```bash
 pip install -r requirements-dev.txt
-pytest                # 54 tests, ~7s, SQLite in-memory
+pytest                # ~10s on SQLite, no services needed; 98% line coverage
 ruff check . && ruff format --check .
+
+# Same suite against the production engine (CI does this too):
+CORVIN_TEST_DATABASE_URL=postgresql+psycopg://corvin:corvin@localhost:5432/corvin pytest
 ```
 
 | Tests | Cover |
 |---|---|
-| `test_rules_engine.py`, `test_fixtures.py` | Engine mechanics + six realistic incidents: DORA-only, GDPR-only, NIS2-only, all three, none, needs-human-input |
+| `test_rules_engine.py`, `test_rules_engine_conditions.py`, `test_fixtures.py` | Every operator and combinator, YAML loading and version precedence, and six realistic incidents: DORA-only, GDPR-only, NIS2-only, all three, none, needs-human-input |
 | `test_clocks.py` | 24h cap, calendar-month arithmetic, DST-spanning windows, backdated awareness, naive-timestamp rejection |
-| `test_audit_trail.py`, `test_audit_service_db.py` | Chain verification; edit/delete/reorder detection, including a raw SQL tamper |
-| `test_drafting.py`, `test_llm_fallbacks.py` | Placeholder rendering, exporter output, every LLM failure mode degrading safely with a recorded reason |
+| `test_audit_trail.py`, `test_audit_service_db.py`, `test_postgres_immutability.py` | Chain verification; edit/delete/reorder detection; raw SQL `UPDATE`/`DELETE` bouncing off the Postgres rules |
+| `test_drafting.py`, `test_llm_fallbacks.py`, `test_llm_client.py` | Placeholder rendering, exporter output, and every provider outcome (rate limit, outage, refusal, truncation, placeholder drift) degrading to the deterministic draft with the reason recorded |
 | `test_services_db.py` | Submitted drafts re-anchoring DORA clocks, sign-off provenance, closing incidents |
-| `test_smoke_e2e.py`, `test_dashboard_ui.py` | The full demo walkthrough through the JSON API and through the HTML forms |
+| `test_api.py`, `test_smoke_e2e.py`, `test_dashboard_ui.py` | Auth and role separation, validation, conflicts, rate limiting, downloads, and the full demo walkthrough through both the JSON API and the HTML forms |
+| `test_migrations.py`, `test_config_and_types.py` | Alembic up/down matches the ORM exactly; production refuses placeholder secrets; UTC normalisation at the DB boundary |
+
+CI runs lint, the suite on SQLite with coverage, the suite again on Postgres 16,
+and a Docker image build.
 
 Screenshots in `docs/screenshots/` are regenerated with
 `python -m scripts.capture_screenshots` (needs `playwright` and a Chromium).

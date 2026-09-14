@@ -8,8 +8,6 @@ from app.models import CustomerConfig, IncidentSource, IncidentStatus, Role, Use
 from app.models.customer_config import SINGLETON_ID
 from app.services import clock_service, draft_service, incident_service
 
-UTC = UTC
-
 DORA_FACTS = {
     "affected_clients_pct": 20,
     "critical_services_affected": True,

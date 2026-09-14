@@ -20,10 +20,6 @@ from ..rules_engine import evaluate_all, load_all_rulesets
 _RULESETS = load_all_rulesets()
 
 
-def get_rulesets():
-    return _RULESETS
-
-
 def create_incident(
     db: Session,
     *,

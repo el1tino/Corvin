@@ -23,7 +23,7 @@ class AuditEvent(Base, UUIDPk, Timestamped):
     # on the chain's tail. Deliberately not a DB-native autoincrement/
     # sequence, so the same code path works identically on Postgres in
     # production and SQLite in tests.
-    seq: Mapped[int] = mapped_column(Integer, unique=True, nullable=False)
+    seq: Mapped[int] = mapped_column(Integer, unique=True, index=True, nullable=False)
 
     incident_id: Mapped[str | None] = mapped_column(ForeignKey("incidents.id"), nullable=True, index=True)
     actor_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
