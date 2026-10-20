@@ -136,7 +136,7 @@ Open <http://localhost:8000> and log in with one of the seeded demo accounts:
 | `compliance@corvin.demo` | `CorvinDemo!2026` | compliance: drafts, exports, records submissions |
 | `admin@corvin.demo` | `CorvinDemo!2026` | admin: customer config (authorities, timezone) |
 
-With `APP_ENV=production` the app refuses to start on placeholder secrets.
+With `APP_ENV=production` the app refuses to start on placeholder secrets, and the demo accounts are never created: the container skips the seed and the seed script itself refuses to run, since their password is public.
 
 ### Ten-minute demo
 

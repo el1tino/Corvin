@@ -29,6 +29,35 @@ def test_app_refuses_to_start_in_production_with_placeholder_secrets(app_env, mo
         pass
 
 
+def test_demo_seed_refuses_to_run_in_production(app_env, monkeypatch):
+    from conftest import reset_runtime_caches
+    from sqlalchemy import inspect
+
+    from app.database import get_engine
+    from scripts import demo_seed
+
+    monkeypatch.setenv("APP_ENV", "production")
+    reset_runtime_caches()
+    with pytest.raises(demo_seed.DemoSeedRefused, match="production"):
+        demo_seed.main()
+    # Refused before touching the database: not even the tables were created.
+    assert "users" not in inspect(get_engine()).get_table_names()
+
+
+def test_demo_seed_runs_outside_production(app_env):
+    from app.database import get_session_factory
+    from app.models import User
+    from scripts import demo_seed
+
+    demo_seed.main()
+    db = get_session_factory()()
+    try:
+        emails = {u.email for u in db.query(User).all()}
+    finally:
+        db.close()
+    assert {email for email, _, _ in demo_seed.DEMO_USERS} <= emails
+
+
 def test_utc_datetime_rejects_naive_writes_and_normalises_reads():
     column = UTCDateTime()
     with pytest.raises(ValueError, match="Naive datetime"):

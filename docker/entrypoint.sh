@@ -26,7 +26,14 @@ sys.exit(1)
 echo "Running database migrations..."
 alembic upgrade head
 
-echo "Seeding demo data (idempotent, no-op if already seeded)..."
-python -m scripts.demo_seed || true
+# Demo accounts use a password published in the README, so they are never
+# created in production. The settings check reads APP_ENV from the
+# environment or .env, exactly as the app does.
+if python -c "import sys; from app.config import get_settings; sys.exit(0 if get_settings().is_production else 1)"; then
+    echo "APP_ENV=production: skipping demo seed."
+else
+    echo "Seeding demo data (idempotent, no-op if already seeded)..."
+    python -m scripts.demo_seed || true
+fi
 
 exec "$@"

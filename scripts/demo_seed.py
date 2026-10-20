@@ -5,12 +5,19 @@ has something to log into immediately.
 Safe to run repeatedly (e.g. on every container start); it only inserts
 rows that don't already exist.
 
+Refuses to run when APP_ENV=production: the demo password is published in
+the README, so seeding it into a real deployment would hand out a known
+admin login.
+
 Usage: python -m scripts.demo_seed
 """
 
 from __future__ import annotations
 
+import sys
+
 from app.auth.security import hash_password
+from app.config import get_settings
 from app.database import Base, get_engine, get_session_factory
 from app.models import CustomerConfig, Role, User
 from app.models.customer_config import SINGLETON_ID
@@ -23,7 +30,16 @@ DEMO_USERS = [
 DEMO_PASSWORD = "CorvinDemo!2026"
 
 
+class DemoSeedRefused(RuntimeError):
+    """Raised when the demo seed is asked to run in production."""
+
+
 def main() -> None:
+    if get_settings().is_production:
+        raise DemoSeedRefused(
+            "Refusing to seed demo accounts with APP_ENV=production: their password is public. "
+            "Create real users instead."
+        )
     Base.metadata.create_all(get_engine())
     db = get_session_factory()()
     try:
@@ -65,4 +81,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except DemoSeedRefused as exc:
+        print(exc, file=sys.stderr)
+        sys.exit(1)
